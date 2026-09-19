@@ -11,3 +11,7 @@ dist/
 build/
 *.egg-info/
 .env
+
+# Files supplied with the laboratory assignment
+Lab_01.docx
+Приклад_звіту.docx
