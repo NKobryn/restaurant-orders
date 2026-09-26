@@ -1,8 +1,10 @@
 # Restaurant Orders
 
-Лабораторна робота №1 з курсу «Професійний Python».
+Навчальний проєкт з курсу «Професійний Python», варіант №11 — «Облік замовлень ресторану».
+Проєкт розвивається від лабораторної до лабораторної:
 
-Варіант №11 — «Облік замовлень ресторану».
+- лабораторна робота №1 — структура проєкту, моделі, business logic, консольне меню;
+- лабораторна робота №2 — аналіз замовлень за допомогою структур даних Python.
 
 ## Можливості
 
@@ -12,6 +14,16 @@
 - обчислення середньої вартості замовлень;
 - сортування замовлень за сумою;
 - інтерактивне меню з перевіркою введених даних.
+
+Лабораторна робота №2 («Аналіз замовлень ресторану»):
+
+- унікальні страви та категорії (set);
+- сума кожного замовлення і середня вартість замовлення;
+- найдорожча позиція і найпопулярніша страва (Counter);
+- групування позицій за замовленнями (defaultdict), рейтинг замовлень;
+- пошук замовлення за номером через dict-index;
+- фільтри через closure і lambda, decorators, історія операцій (deque);
+- benchmark пошуку в list, dict і set на 1 000, 10 000 і 100 000 записів.
 
 ## Вимоги
 
@@ -42,6 +54,18 @@ python -m restaurant_orders.main --interactive
 
 Після editable installation також доступна команда `restaurant-orders`.
 
+Аналіз замовлень (лабораторна робота №2):
+
+```bash
+python -m restaurant_orders.analysis
+```
+
+Benchmark пошуку в list, dict і set (виконується кілька секунд):
+
+```bash
+python -m restaurant_orders.benchmark
+```
+
 ## Тести
 
 ```bash
@@ -57,8 +81,16 @@ restaurant_orders/
 ├── .gitignore
 ├── src/restaurant_orders/
 │   ├── __init__.py
-│   ├── main.py       # точка входу та консольне меню
-│   ├── models.py     # dataclass Dish і Order
-│   └── services.py   # business logic
-└── tests/test_services.py
+│   ├── main.py        # точка входу та консольне меню (ЛР1)
+│   ├── models.py      # dataclass Dish і Order
+│   ├── services.py    # business logic (ЛР1)
+│   ├── data.py        # демонстраційне меню і замовлення (ЛР2)
+│   ├── processors.py  # перетворення замовлень у list, set, dict, Counter (ЛР2)
+│   ├── analytics.py   # статистика, closure, *args, **kwargs (ЛР2)
+│   ├── decorators.py  # measure_time, track_operation, історія deque (ЛР2)
+│   ├── analysis.py    # точка входу аналізу (ЛР2)
+│   └── benchmark.py   # порівняння пошуку list / dict / set (ЛР2)
+└── tests/
+    ├── test_services.py
+    └── test_analytics.py
 ```
