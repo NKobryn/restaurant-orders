@@ -85,8 +85,12 @@ class OrderRepository:
         return self.session.get(Order, order_id)
 
     def history(self) -> list[Order]:
-        """All orders with their items, from the first to the last."""
-        statement = select(Order).options(selectinload(Order.items).selectinload(OrderItem.dish)).order_by(Order.id)
+        """All orders with their items, from the oldest to the newest (created_at, then number)."""
+        statement = (
+            select(Order)
+            .options(selectinload(Order.items).selectinload(OrderItem.dish))
+            .order_by(Order.created_at, Order.id)
+        )
         return list(self.session.scalars(statement))
 
     def remove_item(self, order_id: int, dish_id: int) -> bool:
