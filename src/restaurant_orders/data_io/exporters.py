@@ -2,7 +2,8 @@
 
 import csv
 import json
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable, Iterator
+from contextlib import contextmanager
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any
@@ -29,14 +30,18 @@ def export_json(records: Iterable[OrderItemRecord], path: Path) -> int:
     return count
 
 
-def export_errors_csv(errors: Iterable[RecordValidationError], path: Path) -> None:
-    """Write invalid records (line, field, message) into a separate CSV file."""
+@contextmanager
+def errors_csv(path: Path) -> Iterator[Callable[[RecordValidationError], None]]:
+    """Open an atomic CSV of invalid records and give a function that writes one error at once."""
     try:
         with atomic_write(path) as file:
             writer = csv.writer(file)
             writer.writerow(["line_number", "field", "message"])
-            for error in errors:
+
+            def write_error(error: RecordValidationError) -> None:
                 writer.writerow([error.line_number, error.field or "", error.args[0]])
+
+            yield write_error
     except OSError as error:
         raise DataExportError(f"Не вдалося записати {path}.") from error
 

@@ -88,7 +88,7 @@ def eager_import(path: Path) -> list[OrderItemRecord]:
 def streaming_import(path: Path) -> int:
     """Streaming: rows flow through the generator pipeline one by one."""
     config = make_config(path.parent, path, skip_invalid=True)
-    return sum(1 for _ in valid_records(config, ImportStatistics(), []))
+    return sum(1 for _ in valid_records(config, ImportStatistics(), lambda error: None))
 
 
 def best_time(action: Callable[[], Any]) -> float:
