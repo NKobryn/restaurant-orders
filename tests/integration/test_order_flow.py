@@ -11,7 +11,7 @@ from restaurant_orders.domain.exceptions import PaymentError
 from restaurant_orders.domain.models import OrderStatus
 from restaurant_orders.domain.value_objects import Money
 from restaurant_orders.flow import run_order_flow
-from restaurant_orders.main import main
+from restaurant_orders.flow_app import main
 
 pytestmark = pytest.mark.integration
 

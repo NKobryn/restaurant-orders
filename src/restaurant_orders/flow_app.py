@@ -1,6 +1,6 @@
-"""Main entry point: order flow of laboratory work 6 (import -> orders -> payment -> async delivery).
+"""Order flow application of laboratory work 6 (import -> orders -> payment -> async delivery).
 
-Usage: python -m restaurant_orders.main [config.yaml]  (or set RESTAURANT_CONFIG)
+Usage: python -m restaurant_orders.flow_app [config.yaml]  (or set RESTAURANT_CONFIG)
 """
 
 import logging
