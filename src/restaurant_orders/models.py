@@ -60,3 +60,13 @@ class OrderItemRecord:
     def line_total(self) -> float:
         """Return the price of the position for the whole quantity."""
         return self.price * self.quantity
+
+
+@dataclass(slots=True, frozen=True)
+class OrderSummary:
+    """Result of processing all positions of one order."""
+
+    order_id: int
+    items_count: int
+    total: float
+    most_expensive: OrderItemRecord
