@@ -1,0 +1,25 @@
+# Configuration of the import/export application (laboratory work 5)
+schema_version: 1
+
+input:
+  path: data/orders.csv          # .csv або .jsonl — формат обирається за розширенням
+
+output:
+  path: output/orders.json       # коректні позиції (JSON array)
+  errors_path: output/invalid_orders.csv
+  summary_path: output/summary.json
+
+processing:
+  skip_invalid: true             # true — tolerant, false — strict (зупинка на першій помилці)
+  allowed_categories:
+    - Перші страви
+    - Основні страви
+    - Десерти
+    - Напої
+  price_range:
+    min: 20
+    max: 500
+
+logging:
+  level: INFO
+  path: logs/import.log

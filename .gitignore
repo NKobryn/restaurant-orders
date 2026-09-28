@@ -32,5 +32,6 @@ Lab_04_узгоджено_з_Lab_01.docx
 Lab_05_узгоджено_з_Lab_01.docx
 
 # Results and logs of the import application
-output/
+output/*
+!output/.gitkeep
 logs/
