@@ -1,4 +1,4 @@
-"""Main entry point: demonstration of the typed object model (laboratory work 4)."""
+"""Demonstration of the typed object model (laboratory work 4): python -m restaurant_orders.domain.demo."""
 
 from collections.abc import Callable
 
