@@ -80,9 +80,12 @@ class OrderService:
         return round(float(self.session.scalar(statement) or 0), 2)
 
     def most_expensive_item(self, order_id: int) -> OrderItem | None:
-        """Order item with the highest unit price."""
+        """Order item with the highest unit price (the earlier item wins a tie)."""
         statement = (
-            select(OrderItem).where(OrderItem.order_id == order_id).order_by(OrderItem.unit_price.desc()).limit(1)
+            select(OrderItem)
+            .where(OrderItem.order_id == order_id)
+            .order_by(OrderItem.unit_price.desc(), OrderItem.id)
+            .limit(1)
         )
         return self.session.scalar(statement)
 
