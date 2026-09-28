@@ -1,6 +1,7 @@
 """Logging to a file and to the console."""
 
 import logging
+import sys
 
 from restaurant_orders.data_io.config import LoggingConfig
 
@@ -13,6 +14,6 @@ def configure_logging(config: LoggingConfig) -> None:
     logging.basicConfig(
         level=config.level.upper(),
         format=LOG_FORMAT,
-        handlers=[logging.FileHandler(config.path, encoding="utf-8"), logging.StreamHandler()],
+        handlers=[logging.FileHandler(config.path, encoding="utf-8"), logging.StreamHandler(sys.stdout)],
         force=True,
     )

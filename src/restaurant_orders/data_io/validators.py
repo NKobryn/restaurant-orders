@@ -36,6 +36,12 @@ def validate_row(line_number: int, row: Row, rules: ValidationRules) -> OrderIte
     price = to_float(row, "price", line_number)
     quantity = to_int(row, "quantity", line_number)
 
+    if order_id <= 0:
+        raise RecordValidationError("Номер замовлення має бути додатним.", line_number=line_number, field="order_id")
+    if not dish:
+        raise RecordValidationError("Назва страви порожня.", line_number=line_number, field="dish")
+    if quantity <= 0:
+        raise RecordValidationError("Кількість має бути більшою за нуль.", line_number=line_number, field="quantity")
     if category not in rules.allowed_categories:
         raise RecordValidationError(f"Категорія «{category}» не дозволена.", line_number=line_number, field="category")
     if not rules.min_price <= price <= rules.max_price:
