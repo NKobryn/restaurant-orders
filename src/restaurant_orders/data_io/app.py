@@ -1,6 +1,6 @@
-"""Main entry point: reliable import and export of orders (laboratory work 5).
+"""Import/export application of laboratory work 5.
 
-Usage: python -m restaurant_orders.main [config.yaml]
+Usage: python -m restaurant_orders.data_io.app [config.yaml]
 """
 
 import logging
@@ -12,7 +12,7 @@ from restaurant_orders.data_io.exceptions import ApplicationError, Configuration
 from restaurant_orders.data_io.logging_config import configure_logging
 from restaurant_orders.data_io.services import ImportStatistics, run_import
 
-logger = logging.getLogger("restaurant_orders.main")
+logger = logging.getLogger(__name__)
 
 
 def main(argv: list[str] | None = None) -> int:

@@ -19,7 +19,7 @@ from restaurant_orders.data_io.files import atomic_write
 from restaurant_orders.data_io.readers import CsvImporter, importer_for
 from restaurant_orders.data_io.services import ImportStatistics, run_import
 from restaurant_orders.data_io.validators import validate_row
-from restaurant_orders.main import main
+from restaurant_orders.data_io.app import main
 
 RULES = ValidationRules(frozenset({"Перші страви", "Напої"}), 20.0, 500.0)
 HEADER = "order_id,dish,category,price,quantity\n"
