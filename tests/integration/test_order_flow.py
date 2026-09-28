@@ -20,6 +20,7 @@ ROWS = (
     "201,Узвар,Напої,45,2\n"
     "202,Стейк,Основні страви,280,2\n"
     "203,Капучино,Напої,75,1\n"
+    "203,Борщ,Перші страви,95,1\n"
     "204,Сирник,Десерти,85,1\n"
 )
 
@@ -39,7 +40,7 @@ def test_order_flow_pays_and_delivers(import_files: Callable[..., Path], notifie
 
     result = run_order_flow(load_config(import_files(ROWS)), gateway, notifier, delivery, "Львів")
 
-    assert (result.statistics.valid, result.statistics.invalid) == (4, 1)
+    assert (result.statistics.valid, result.statistics.invalid) == (5, 1)
     assert [order.id for order in result.orders] == [201, 202, 203]
     assert result.failed_payments == [202]
     assert result.deliveries == {201: "DLV-201", 203: "DLV-203"}
