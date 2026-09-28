@@ -27,3 +27,10 @@ data/generated/
 
 # Files supplied with laboratory work 4
 Lab_04_узгоджено_з_Lab_01.docx
+
+# Files supplied with laboratory work 5
+Lab_05_узгоджено_з_Lab_01.docx
+
+# Results and logs of the import application
+output/
+logs/
