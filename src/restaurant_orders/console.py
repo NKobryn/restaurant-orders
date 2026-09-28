@@ -1,4 +1,4 @@
-"""Console entry point for the restaurant orders application."""
+"""Console application of laboratory work 1 (demo and interactive menu)."""
 
 import sys
 
@@ -127,7 +127,7 @@ def main() -> None:
     if "--interactive" in sys.argv:
         run_menu(orders)
     else:
-        print("\nДля введення даних з клавіатури: python -m restaurant_orders.main --interactive")
+        print("\nДля введення даних з клавіатури: python -m restaurant_orders.console --interactive")
 
 
 if __name__ == "__main__":
