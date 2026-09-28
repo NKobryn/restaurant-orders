@@ -1,13 +1,13 @@
 """Import/export application of laboratory work 5.
 
-Usage: python -m restaurant_orders.data_io.app [config.yaml]
+Usage: python -m restaurant_orders.data_io.app [config.yaml]  (or set RESTAURANT_CONFIG)
 """
 
 import logging
 import sys
 from pathlib import Path
 
-from restaurant_orders.data_io.config import load_config
+from restaurant_orders.data_io.config import default_config_path, load_config
 from restaurant_orders.data_io.exceptions import ApplicationError, ConfigurationError
 from restaurant_orders.data_io.logging_config import configure_logging
 from restaurant_orders.data_io.services import ImportStatistics, run_import
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 def main(argv: list[str] | None = None) -> int:
     """Run the import; return 0 on success and 1 on a critical error."""
     arguments = sys.argv[1:] if argv is None else argv
-    config_path = Path(arguments[0]) if arguments else Path("config.yaml")
+    config_path = Path(arguments[0]) if arguments else default_config_path()
     print("ІМПОРТ ТА ЕКСПОРТ ЗАМОВЛЕНЬ РЕСТОРАНУ (лабораторна робота №5, варіант №11)")
     try:
         config = load_config(config_path)

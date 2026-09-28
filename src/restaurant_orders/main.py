@@ -1,13 +1,13 @@
 """Main entry point: order flow of laboratory work 6 (import -> orders -> payment -> async delivery).
 
-Usage: python -m restaurant_orders.main [config.yaml]
+Usage: python -m restaurant_orders.main [config.yaml]  (or set RESTAURANT_CONFIG)
 """
 
 import logging
 import sys
 from pathlib import Path
 
-from restaurant_orders.data_io.config import load_config
+from restaurant_orders.data_io.config import default_config_path, load_config
 from restaurant_orders.data_io.exceptions import ApplicationError
 from restaurant_orders.domain.adapters import ConsoleKitchenNotifier, LimitedPaymentGateway
 from restaurant_orders.domain.delivery import DemoDeliveryService
@@ -33,7 +33,7 @@ def print_result(result: FlowResult) -> None:
 def main(argv: list[str] | None = None) -> int:
     """Run the order flow; return 0 on success and 1 on an application error."""
     arguments = sys.argv[1:] if argv is None else argv
-    config_path = Path(arguments[0]) if arguments else Path("config.yaml")
+    config_path = Path(arguments[0]) if arguments else default_config_path()
     print("ПОВНИЙ СЦЕНАРІЙ ЗАМОВЛЕННЯ (лабораторна робота №6, варіант №11)")
     logging.basicConfig(level=logging.WARNING, format="%(levelname)s | %(message)s", stream=sys.stdout, force=True)
     try:

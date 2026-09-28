@@ -1,5 +1,6 @@
 """Loading and validation of the YAML configuration."""
 
+import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -9,6 +10,7 @@ import yaml
 from restaurant_orders.data_io.exceptions import ConfigurationError
 
 SUPPORTED_SCHEMA_VERSION = 1
+CONFIG_ENV_VARIABLE = "RESTAURANT_CONFIG"
 
 
 @dataclass(frozen=True, slots=True)
@@ -39,6 +41,11 @@ class AppConfig:
     skip_invalid: bool
     rules: ValidationRules
     logging: LoggingConfig
+
+
+def default_config_path() -> Path:
+    """Return the path from RESTAURANT_CONFIG or config.yaml in the current folder."""
+    return Path(os.environ.get(CONFIG_ENV_VARIABLE, "config.yaml"))
 
 
 def read_yaml(path: Path) -> dict[str, Any]:
