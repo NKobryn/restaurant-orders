@@ -7,7 +7,8 @@
 - лабораторна робота №2 — аналіз замовлень за допомогою структур даних Python;
 - лабораторна робота №3 — потокова обробка великих CSV-файлів замовлень (iterators, generators, itertools);
 - лабораторна робота №4 — типізована ООП-модель ресторану (dataclass, ABC, Protocol, Generic, SOLID, mypy);
-- лабораторна робота №5 — надійний імпорт/експорт замовлень (exceptions, context managers, logging, CSV/JSON/YAML).
+- лабораторна робота №5 — надійний імпорт/експорт замовлень (exceptions, context managers, logging, CSV/JSON/YAML);
+- лабораторна робота №6 — автоматизоване тестування (pytest, fixtures, mocks, AsyncMock, coverage) і повний сценарій замовлення.
 
 ## Можливості
 
@@ -57,6 +58,16 @@
 - атомарний потоковий JSON-експорт, підсумок `summary.json`, власні context managers `atomic_write`, `logged_operation`;
 - експерименти: strict vs tolerant, streaming vs eager, chaining, atomic output, помилки конфігурації.
 
+Лабораторна робота №6 («Автоматизоване тестування», test suite у `tests/`):
+
+- `tests/unit/` і `tests/integration/` (маркер `integration`), спільні fixtures у `tests/conftest.py`
+  (fixture factories, parameterized і autouse fixtures, fake repository, autospec mocks);
+- Mock / `return_value` / `side_effect` / interaction assertions, `AsyncMock` для асинхронної доставки,
+  `tmp_path`, `monkeypatch` (змінні середовища, функції, `input`);
+- statement і branch coverage з порогом 80 % у `pyproject.toml`, HTML-звіт;
+- асинхронна служба доставки `domain/delivery.py` і повний сценарій замовлення `flow.py`;
+- експерименти з тестування в `experiments/testing/` (не входять до основного набору).
+
 ## Вимоги
 
 Python 3.11 або новішої версії.
@@ -67,18 +78,24 @@ Python 3.11 або новішої версії.
 python -m venv .venv
 source .venv/bin/activate       # Linux/macOS
 # .venv\Scripts\activate        # Windows
-python -m pip install -e ".[dev]"   # PyYAML, а також mypy і types-PyYAML
+python -m pip install -e ".[dev]"   # PyYAML, а також mypy, types-PyYAML, pytest, pytest-cov
 ```
 
 ## Запуск
 
-Головна точка входу — поточна лабораторна робота (№5): імпорт `data/orders.csv` за `config.yaml`,
-результат у `output/`, журнал у `logs/import.log`; код завершення 0 — успіх, 1 — критична помилка.
-Після editable installation те саме запускає команда `restaurant-orders`:
+Головна точка входу — поточна лабораторна робота (№6): повний сценарій замовлення — імпорт
+`data/orders.csv` за `config.yaml` → замовлення → оплата (ліміт картки 450 грн) → асинхронна доставка.
+Код завершення 0 — успіх, 1 — помилка конфігурації. Те саме запускає команда `restaurant-orders`:
 
 ```bash
 python -m restaurant_orders.main                 # config.yaml за замовчуванням
-python -m restaurant_orders.main інший_config.yaml
+RESTAURANT_CONFIG=інший.yaml python -m restaurant_orders.main
+```
+
+Застосунок імпорту/експорту лабораторної роботи №5 (результат у `output/`, журнал у `logs/import.log`):
+
+```bash
+python -m restaurant_orders.data_io.app          # або python -m restaurant_orders.data_io.app інший.yaml
 ```
 
 Щоб змінити поведінку без редагування коду, змініть `config.yaml`: `skip_invalid: false` — strict mode,
@@ -132,9 +149,14 @@ python -m restaurant_orders.stream.experiment
 ## Тести і перевірка типів
 
 ```bash
-python -m unittest discover -s tests -v
+pytest                                # увесь test suite (unit + integration)
+pytest -v -m integration              # лише інтеграційні тести
+pytest --cov                          # statement + branch coverage, поріг 80 %
+pytest --cov --cov-report=html        # HTML-звіт у htmlcov/index.html
 mypy                                  # налаштування strict у pyproject.toml
 ```
+
+Експерименти з тестування: `experiments/testing/README.md`.
 
 ## Структура проєкту
 
@@ -151,7 +173,8 @@ restaurant_orders/
 ├── output/, logs/              # результати й журнал імпорту (не комітяться)
 ├── src/restaurant_orders/
 │   ├── __init__.py
-│   ├── main.py                 # головна точка входу: поточна лабораторна (ЛР5)
+│   ├── main.py                 # головна точка входу: поточна лабораторна (ЛР6, сценарій замовлення)
+│   ├── flow.py                 # імпорт → замовлення → оплата → доставка (ЛР6)
 │   ├── console.py              # консольне меню (ЛР1)
 │   ├── models.py               # Dish, Order (ЛР1), OrderItemRecord, OrderSummary (ЛР3)
 │   ├── services.py             # business logic (ЛР1)
@@ -173,6 +196,7 @@ restaurant_orders/
 │   │   ├── repositories.py     # Repository[T], InMemoryRepository[T]
 │   │   ├── pricing.py          # PricingPolicy, NoDiscount, CategoryDiscount
 │   │   ├── dto.py, adapters.py, exceptions.py, services.py
+│   │   ├── delivery.py         # асинхронна доставка (ЛР6)
 │   │   ├── demo.py             # демонстрація ЛР4
 │   │   └── experiments.py      # DI, inheritance vs composition
 │   └── data_io/                # надійний імпорт/експорт (ЛР5)
@@ -184,10 +208,11 @@ restaurant_orders/
 │       ├── files.py            # atomic_write, logged_operation
 │       ├── exporters.py        # export_json, errors_csv, export_summary
 │       ├── services.py         # run_import, ImportStatistics
+│       ├── app.py              # застосунок імпорту ЛР5
 │       └── experiments.py      # експерименти ЛР5
+├── experiments/testing/        # експерименти з тестування (ЛР6)
 └── tests/
-    ├── test_services.py, test_analytics.py   # ЛР1–2
-    ├── test_stream.py                        # ЛР3
-    ├── test_domain.py                        # ЛР4
-    └── test_data_io.py                       # ЛР5
+    ├── conftest.py                           # спільні fixtures (ЛР6)
+    ├── unit/                                 # тести ЛР1–5 (unittest) і нові pytest-тести ЛР6
+    └── integration/                          # import pipeline, order flow, консольні застосунки (ЛР6)
 ```
