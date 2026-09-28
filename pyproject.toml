@@ -16,6 +16,8 @@ dependencies = [
 dev = [
     "mypy>=1.10",
     "types-PyYAML",
+    "pytest>=8",
+    "pytest-cov>=5",
 ]
 
 [project.scripts]
@@ -27,6 +29,26 @@ where = ["src"]
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
+addopts = "--import-mode=importlib --strict-markers"
+markers = [
+    "integration: tests that combine several components (files, services, application flow)",
+]
+
+[tool.coverage.run]
+source = ["restaurant_orders"]
+branch = true
+omit = [
+    # scripts that only print demonstrations and experiment results
+    "*/restaurant_orders/*/experiments.py",
+    "*/restaurant_orders/stream/experiment.py",
+    "*/restaurant_orders/benchmark.py",
+    "*/restaurant_orders/domain/demo.py",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+fail_under = 80
 
 [tool.mypy]
 python_version = "3.11"

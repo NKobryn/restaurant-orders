@@ -35,3 +35,10 @@ Lab_05_узгоджено_з_Lab_01.docx
 output/*
 !output/.gitkeep
 logs/
+
+# Files supplied with laboratory work 6
+Lab_06_узгоджено_з_Lab_01.docx
+
+# Test and coverage artefacts
+.coverage
+htmlcov/
