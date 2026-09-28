@@ -6,7 +6,8 @@
 - лабораторна робота №1 — структура проєкту, моделі, business logic, консольне меню;
 - лабораторна робота №2 — аналіз замовлень за допомогою структур даних Python;
 - лабораторна робота №3 — потокова обробка великих CSV-файлів замовлень (iterators, generators, itertools);
-- лабораторна робота №4 — типізована ООП-модель ресторану (dataclass, ABC, Protocol, Generic, SOLID, mypy).
+- лабораторна робота №4 — типізована ООП-модель ресторану (dataclass, ABC, Protocol, Generic, SOLID, mypy);
+- лабораторна робота №5 — надійний імпорт/експорт замовлень (exceptions, context managers, logging, CSV/JSON/YAML).
 
 ## Можливості
 
@@ -46,6 +47,16 @@
   оплата й сповіщення кухні; усі залежності передаються в конструктор (dependency injection);
 - перевірка типів `mypy --strict`, експерименти DI і inheritance vs composition.
 
+Лабораторна робота №5 («Імпорт та експорт замовлень ресторану», пакет `restaurant_orders.data_io`):
+
+- конфігурація `config.yaml` (категорії, діапазон цін, strict/tolerant, шляхи, logging, schema_version);
+- власна ієрархія винятків `ApplicationError` і exception chaining (`raise ... from error`);
+- потокове читання CSV і JSON Lines через `Importer` Protocol, формат за розширенням файлу;
+- валідація order_id, назви страви, дозволеної категорії, ціни в діапазоні, кількості > 0;
+- strict (зупинка на першій помилці) і tolerant (пропуск із записом у log і в `invalid_orders.csv`);
+- атомарний потоковий JSON-експорт, підсумок `summary.json`, власні context managers `atomic_write`, `logged_operation`;
+- експерименти: strict vs tolerant, streaming vs eager, chaining, atomic output, помилки конфігурації.
+
 ## Вимоги
 
 Python 3.11 або новішої версії.
@@ -56,21 +67,33 @@ Python 3.11 або новішої версії.
 python -m venv .venv
 source .venv/bin/activate       # Linux/macOS
 # .venv\Scripts\activate        # Windows
-python -m pip install -e ".[dev]"   # разом із mypy
+python -m pip install -e ".[dev]"   # PyYAML, а також mypy і types-PyYAML
 ```
 
 ## Запуск
 
-Головна точка входу показує поточну лабораторну роботу (№4 — ООП-модель ресторану);
-після editable installation те саме запускає команда `restaurant-orders`:
+Головна точка входу — поточна лабораторна робота (№5): імпорт `data/orders.csv` за `config.yaml`,
+результат у `output/`, журнал у `logs/import.log`; код завершення 0 — успіх, 1 — критична помилка.
+Після editable installation те саме запускає команда `restaurant-orders`:
 
 ```bash
-python -m restaurant_orders.main
+python -m restaurant_orders.main                 # config.yaml за замовчуванням
+python -m restaurant_orders.main інший_config.yaml
 ```
 
-Експерименти лабораторної роботи №4 (dependency injection, inheritance vs composition):
+Щоб змінити поведінку без редагування коду, змініть `config.yaml`: `skip_invalid: false` — strict mode,
+`input.path: data/orders.jsonl` — імпорт JSON Lines, `price_range` чи `allowed_categories` — правила перевірки.
+
+Експерименти лабораторної роботи №5 (близько 20 секунд):
 
 ```bash
+python -m restaurant_orders.data_io.experiments
+```
+
+Лабораторна робота №4 — демонстрація ООП-моделі та експерименти DI і inheritance vs composition:
+
+```bash
+python -m restaurant_orders.domain.demo
 python -m restaurant_orders.domain.experiments
 ```
 
@@ -120,45 +143,51 @@ restaurant_orders/
 ├── pyproject.toml
 ├── README.md
 ├── .gitignore
+├── config.yaml                 # конфігурація імпорту (ЛР5)
+├── data/
+│   ├── orders_sample.csv       # малий приклад із помилками (ЛР3)
+│   ├── orders.csv              # вхідні дані ЛР5 (з некоректними рядками)
+│   └── orders.jsonl            # ті самі дані у форматі JSON Lines (ЛР5)
+├── output/, logs/              # результати й журнал імпорту (не комітяться)
 ├── src/restaurant_orders/
 │   ├── __init__.py
-│   ├── main.py        # головна точка входу: демо поточної лабораторної (ЛР4)
-│   ├── console.py     # консольне меню (ЛР1)
-│   ├── models.py      # dataclass Dish і Order
-│   ├── services.py    # business logic (ЛР1)
-│   ├── data.py        # демонстраційне меню і замовлення (ЛР2)
-│   ├── processors.py  # перетворення замовлень у list, set, dict, Counter (ЛР2)
-│   ├── analytics.py   # статистика, closure, *args, **kwargs (ЛР2)
-│   ├── decorators.py  # measure_time, track_operation, історія deque (ЛР2)
-│   ├── analysis.py    # точка входу аналізу (ЛР2)
-│   ├── benchmark.py   # порівняння пошуку list / dict / set (ЛР2)
-│   ├── stream/        # потокова обробка (ЛР3)
-│       ├── iterators.py    # OrderIdSequence, endless_order_ids
-│       ├── readers.py      # read_lines, read_many (chain)
-│       ├── parsers.py      # clean_lines, parse_rows
-│       ├── validation.py   # validate_records, лічильник помилок
-│       ├── filters.py      # filter_by_category, first_orders, find_first
-│       ├── pipeline.py     # groupby, batched, build_pipeline
-│       ├── analytics.py    # статистика, accumulate, batch_reports
-│       ├── export.py       # потоковий експорт у CSV
-│       ├── dataset.py      # генератор великих CSV
-│       ├── main.py         # точка входу ЛР3
-│       └── experiment.py   # eager проти lazy
-│   └── domain/        # типізована ООП-модель (ЛР4)
-│       ├── value_objects.py  # Money
-│       ├── models.py         # Dish, OrderItem, Order, OrderStatus, Menu
-│       ├── protocols.py      # HasId, PaymentGateway, KitchenNotifier
-│       ├── repositories.py   # Repository[T], InMemoryRepository[T]
-│       ├── pricing.py        # PricingPolicy, NoDiscount, CategoryDiscount
-│       ├── dto.py            # DishPayload (TypedDict)
-│       ├── adapters.py       # DemoPaymentGateway, LimitedPaymentGateway, ConsoleKitchenNotifier
-│       ├── exceptions.py     # RestaurantError і нащадки
-│       ├── services.py       # RestaurantService
-│       └── experiments.py    # DI, inheritance vs composition
-├── data/orders_sample.csv  # малий приклад із помилками (ЛР3)
+│   ├── main.py                 # головна точка входу: поточна лабораторна (ЛР5)
+│   ├── console.py              # консольне меню (ЛР1)
+│   ├── models.py               # Dish, Order (ЛР1), OrderItemRecord, OrderSummary (ЛР3)
+│   ├── services.py             # business logic (ЛР1)
+│   ├── data.py                 # демонстраційне меню і замовлення (ЛР2)
+│   ├── processors.py           # list, set, dict, Counter (ЛР2)
+│   ├── analytics.py            # статистика, closure, *args, **kwargs (ЛР2)
+│   ├── decorators.py           # measure_time, track_operation (ЛР2)
+│   ├── analysis.py             # точка входу аналізу (ЛР2)
+│   ├── benchmark.py            # пошук у list / dict / set (ЛР2)
+│   ├── stream/                 # потокова обробка (ЛР3)
+│   │   ├── iterators.py, readers.py, parsers.py, validation.py
+│   │   ├── filters.py, pipeline.py, analytics.py, export.py, dataset.py
+│   │   ├── main.py             # точка входу ЛР3
+│   │   └── experiment.py       # eager проти lazy
+│   ├── domain/                 # типізована ООП-модель (ЛР4)
+│   │   ├── value_objects.py    # Money
+│   │   ├── models.py           # Dish, OrderItem, Order, OrderStatus, Menu
+│   │   ├── protocols.py        # HasId, PaymentGateway, KitchenNotifier
+│   │   ├── repositories.py     # Repository[T], InMemoryRepository[T]
+│   │   ├── pricing.py          # PricingPolicy, NoDiscount, CategoryDiscount
+│   │   ├── dto.py, adapters.py, exceptions.py, services.py
+│   │   ├── demo.py             # демонстрація ЛР4
+│   │   └── experiments.py      # DI, inheritance vs composition
+│   └── data_io/                # надійний імпорт/експорт (ЛР5)
+│       ├── exceptions.py       # ApplicationError і нащадки
+│       ├── config.py           # AppConfig, load_config (YAML)
+│       ├── logging_config.py   # configure_logging
+│       ├── readers.py          # Importer, CsvImporter, JsonLinesImporter
+│       ├── validators.py       # validate_row
+│       ├── files.py            # atomic_write, logged_operation
+│       ├── exporters.py        # export_json, errors_csv, export_summary
+│       ├── services.py         # run_import, ImportStatistics
+│       └── experiments.py      # експерименти ЛР5
 └── tests/
-    ├── test_services.py
-    ├── test_analytics.py
-    ├── test_stream.py
-    └── test_domain.py
+    ├── test_services.py, test_analytics.py   # ЛР1–2
+    ├── test_stream.py                        # ЛР3
+    ├── test_domain.py                        # ЛР4
+    └── test_data_io.py                       # ЛР5
 ```
