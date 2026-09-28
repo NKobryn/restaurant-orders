@@ -5,7 +5,8 @@
 
 - лабораторна робота №1 — структура проєкту, моделі, business logic, консольне меню;
 - лабораторна робота №2 — аналіз замовлень за допомогою структур даних Python;
-- лабораторна робота №3 — потокова обробка великих CSV-файлів замовлень (iterators, generators, itertools).
+- лабораторна робота №3 — потокова обробка великих CSV-файлів замовлень (iterators, generators, itertools);
+- лабораторна робота №4 — типізована ООП-модель ресторану (dataclass, ABC, Protocol, Generic, SOLID, mypy).
 
 ## Можливості
 
@@ -34,6 +35,17 @@
 - потоковий середній чек (`accumulate`), batch processing, потоковий експорт сум у CSV;
 - експеримент eager проти lazy: час, пікова пам'ять (tracemalloc), time to first result, early termination.
 
+Лабораторна робота №4 («Система обліку замовлень ресторану», пакет `restaurant_orders.domain`):
+
+- value object `Money` (frozen dataclass, `+`, `*`, порівняння через `total_ordering`);
+- сутності `Dish` (ціна через property), `OrderItem`, `Order` (композиція позицій, статус), колекція `Menu`;
+- `Repository[T]` (ABC + Generic, `TypeVar` з bound) і `InMemoryRepository[T]`;
+- `PaymentGateway`, `KitchenNotifier` (Protocol), стратегії ціни `PricingPolicy` (ABC);
+- `DishPayload` (TypedDict), ієрархія винятків `RestaurantError`;
+- `RestaurantService` — створення замовлення, страви, сума, найдорожча страва, середня вартість,
+  оплата й сповіщення кухні; усі залежності передаються в конструктор (dependency injection);
+- перевірка типів `mypy --strict`, експерименти DI і inheritance vs composition.
+
 ## Вимоги
 
 Python 3.11 або новішої версії.
@@ -44,24 +56,30 @@ Python 3.11 або новішої версії.
 python -m venv .venv
 source .venv/bin/activate       # Linux/macOS
 # .venv\Scripts\activate        # Windows
-python -m pip install -e .
+python -m pip install -e ".[dev]"   # разом із mypy
 ```
 
 ## Запуск
 
-Демонстраційний режим:
+Головна точка входу показує поточну лабораторну роботу (№4 — ООП-модель ресторану);
+після editable installation те саме запускає команда `restaurant-orders`:
 
 ```bash
 python -m restaurant_orders.main
 ```
 
-Інтерактивний режим із введенням даних:
+Експерименти лабораторної роботи №4 (dependency injection, inheritance vs composition):
 
 ```bash
-python -m restaurant_orders.main --interactive
+python -m restaurant_orders.domain.experiments
 ```
 
-Після editable installation також доступна команда `restaurant-orders`.
+Консольний застосунок лабораторної роботи №1 (демо та інтерактивне меню):
+
+```bash
+python -m restaurant_orders.console
+python -m restaurant_orders.console --interactive
+```
 
 Аналіз замовлень (лабораторна робота №2):
 
@@ -88,10 +106,11 @@ python -m restaurant_orders.stream.main
 python -m restaurant_orders.stream.experiment
 ```
 
-## Тести
+## Тести і перевірка типів
 
 ```bash
 python -m unittest discover -s tests -v
+mypy                                  # налаштування strict у pyproject.toml
 ```
 
 ## Структура проєкту
@@ -103,7 +122,8 @@ restaurant_orders/
 ├── .gitignore
 ├── src/restaurant_orders/
 │   ├── __init__.py
-│   ├── main.py        # точка входу та консольне меню (ЛР1)
+│   ├── main.py        # головна точка входу: демо поточної лабораторної (ЛР4)
+│   ├── console.py     # консольне меню (ЛР1)
 │   ├── models.py      # dataclass Dish і Order
 │   ├── services.py    # business logic (ЛР1)
 │   ├── data.py        # демонстраційне меню і замовлення (ЛР2)
@@ -112,7 +132,7 @@ restaurant_orders/
 │   ├── decorators.py  # measure_time, track_operation, історія deque (ЛР2)
 │   ├── analysis.py    # точка входу аналізу (ЛР2)
 │   ├── benchmark.py   # порівняння пошуку list / dict / set (ЛР2)
-│   └── stream/        # потокова обробка (ЛР3)
+│   ├── stream/        # потокова обробка (ЛР3)
 │       ├── iterators.py    # OrderIdSequence, endless_order_ids
 │       ├── readers.py      # read_lines, read_many (chain)
 │       ├── parsers.py      # clean_lines, parse_rows
@@ -124,9 +144,21 @@ restaurant_orders/
 │       ├── dataset.py      # генератор великих CSV
 │       ├── main.py         # точка входу ЛР3
 │       └── experiment.py   # eager проти lazy
+│   └── domain/        # типізована ООП-модель (ЛР4)
+│       ├── value_objects.py  # Money
+│       ├── models.py         # Dish, OrderItem, Order, OrderStatus, Menu
+│       ├── protocols.py      # HasId, PaymentGateway, KitchenNotifier
+│       ├── repositories.py   # Repository[T], InMemoryRepository[T]
+│       ├── pricing.py        # PricingPolicy, NoDiscount, CategoryDiscount
+│       ├── dto.py            # DishPayload (TypedDict)
+│       ├── adapters.py       # DemoPaymentGateway, LimitedPaymentGateway, ConsoleKitchenNotifier
+│       ├── exceptions.py     # RestaurantError і нащадки
+│       ├── services.py       # RestaurantService
+│       └── experiments.py    # DI, inheritance vs composition
 ├── data/orders_sample.csv  # малий приклад із помилками (ЛР3)
 └── tests/
     ├── test_services.py
     ├── test_analytics.py
-    └── test_stream.py
+    ├── test_stream.py
+    └── test_domain.py
 ```
