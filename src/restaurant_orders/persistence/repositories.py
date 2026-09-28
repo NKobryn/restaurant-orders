@@ -33,7 +33,7 @@ class DishRepository:
 
     def add(self, name: str, category: Category, price: float) -> Dish:
         """Create: insert a new dish."""
-        dish = Dish(name=name, category=category, price=price)
+        dish = Dish(name=name, category=category, price=float(price))
         self.session.add(dish)
         self.session.flush()
         return dish
@@ -56,7 +56,7 @@ class DishRepository:
         """Update: change the price of a dish."""
         dish = self.get(dish_id)
         if dish is not None:
-            dish.price = price
+            dish.price = float(price)
             self.session.flush()
         return dish
 
