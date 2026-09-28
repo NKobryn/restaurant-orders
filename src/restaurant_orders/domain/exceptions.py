@@ -23,3 +23,7 @@ class OrderStateError(RestaurantError):
 
 class PaymentError(RestaurantError):
     """Raised when a payment gateway cannot accept the payment."""
+
+
+class DeliveryError(RestaurantError):
+    """Raised when an order cannot be passed to delivery."""
