@@ -42,3 +42,9 @@ Lab_06_узгоджено_з_Lab_01.docx
 # Test and coverage artefacts
 .coverage
 htmlcov/
+
+# Files supplied with laboratory work 7
+Lab_07_узгоджено_з_Lab_01.docx
+
+# SQLite databases created by the application
+*.db
