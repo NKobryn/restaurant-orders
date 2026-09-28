@@ -1,7 +1,7 @@
 """Application layer: use cases of the restaurant."""
 
 from restaurant_orders.domain.exceptions import OrderNotFoundError, OrderStateError
-from restaurant_orders.domain.models import Dish, Menu, Order
+from restaurant_orders.domain.models import Dish, Menu, Order, OrderStatus
 from restaurant_orders.domain.pricing import PricingPolicy
 from restaurant_orders.domain.protocols import KitchenNotifier, PaymentGateway
 from restaurant_orders.domain.repositories import Repository
@@ -58,6 +58,8 @@ class RestaurantService:
     def checkout(self, order_id: int) -> str:
         """Pay for the order, mark it paid and notify the kitchen."""
         order = self._get_order(order_id)
+        if order.status is not OrderStatus.NEW:
+            raise OrderStateError(f"Замовлення №{order_id} вже має статус {order.status.value}.")
         if len(order) == 0:
             raise OrderStateError(f"Замовлення №{order_id} порожнє.")
         payment_id = self._payment_gateway.pay(order.id, self.order_total(order_id))
