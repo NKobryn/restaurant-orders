@@ -8,7 +8,8 @@
 - лабораторна робота №3 — потокова обробка великих CSV-файлів замовлень (iterators, generators, itertools);
 - лабораторна робота №4 — типізована ООП-модель ресторану (dataclass, ABC, Protocol, Generic, SOLID, mypy);
 - лабораторна робота №5 — надійний імпорт/експорт замовлень (exceptions, context managers, logging, CSV/JSON/YAML);
-- лабораторна робота №6 — автоматизоване тестування (pytest, fixtures, mocks, AsyncMock, coverage) і повний сценарій замовлення.
+- лабораторна робота №6 — автоматизоване тестування (pytest, fixtures, mocks, AsyncMock, coverage) і повний сценарій замовлення;
+- лабораторна робота №7 — база даних SQLite: SQLAlchemy ORM, repositories, транзакції, DB-API, міграції Alembic.
 
 ## Можливості
 
@@ -68,6 +69,15 @@
 - асинхронна служба доставки `domain/delivery.py` і повний сценарій замовлення `flow.py`;
 - експерименти з тестування в `experiments/testing/` (не входять до основного набору).
 
+Лабораторна робота №7 («Облік замовлень ресторану» з базою даних, пакет `restaurant_orders.persistence`):
+
+- таблиці `categories`, `dishes`, `orders`, `order_items` (PK, FK з ON DELETE, UNIQUE, CHECK), SQLAlchemy 2.0 ORM;
+- `CategoryRepository`, `DishRepository` (CRUD, фільтр, сортування, пагінація), `OrderRepository` (історія, видалення позицій);
+- `OrderService`: оформлення замовлення однією транзакцією (commit / rollback), SUM, AVG, JOIN + GROUP BY;
+- параметризований пошук страв за категорією через DB-API (`sqlite3`);
+- міграції Alembic: `0001` — створення таблиць, `0002` — `orders.created_at` (upgrade і downgrade);
+- `DATABASE_URL` задає базу (за замовчуванням `sqlite:///restaurant.db`).
+
 ## Вимоги
 
 Python 3.11 або новішої версії.
@@ -78,18 +88,32 @@ Python 3.11 або новішої версії.
 python -m venv .venv
 source .venv/bin/activate       # Linux/macOS
 # .venv\Scripts\activate        # Windows
-python -m pip install -e ".[dev]"   # PyYAML, а також mypy, types-PyYAML, pytest, pytest-cov
+python -m pip install -e ".[dev]"   # PyYAML, SQLAlchemy, Alembic, а також mypy, types-PyYAML, pytest, pytest-cov
 ```
 
 ## Запуск
 
-Головна точка входу — поточна лабораторна робота (№6): повний сценарій замовлення — імпорт
-`data/orders.csv` за `config.yaml` → замовлення → оплата (ліміт картки 450 грн) → асинхронна доставка.
-Код завершення 0 — успіх, 1 — помилка конфігурації. Те саме запускає команда `restaurant-orders`:
+Головна точка входу — поточна лабораторна робота (№7): демонстрація бази даних. Щоразу створює базу
+`restaurant.db` заново (міграції Alembic), показує схему, CRUD страв, транзакції з rollback, історію замовлень,
+агрегати й пошук через DB-API. Те саме запускає команда `restaurant-orders`:
 
 ```bash
-python -m restaurant_orders.main                 # config.yaml за замовчуванням
-RESTAURANT_CONFIG=інший.yaml python -m restaurant_orders.main
+python -m restaurant_orders.main
+DATABASE_URL=sqlite:///інша.db python -m restaurant_orders.main
+```
+
+Міграції вручну (Alembic):
+
+```bash
+alembic upgrade head        # створити / оновити схему
+alembic current             # поточна ревізія
+alembic downgrade 0001      # відкотити додавання created_at
+```
+
+Повний сценарій замовлення лабораторної роботи №6 (імпорт → оплата → асинхронна доставка):
+
+```bash
+python -m restaurant_orders.flow_app             # або RESTAURANT_CONFIG=інший.yaml
 ```
 
 Застосунок імпорту/експорту лабораторної роботи №5 (результат у `output/`, журнал у `logs/import.log`):
@@ -166,6 +190,7 @@ restaurant_orders/
 ├── README.md
 ├── .gitignore
 ├── config.yaml                 # конфігурація імпорту (ЛР5)
+├── alembic.ini, migrations/    # міграції бази даних (ЛР7)
 ├── data/
 │   ├── orders_sample.csv       # малий приклад із помилками (ЛР3)
 │   ├── orders.csv              # вхідні дані ЛР5 (з некоректними рядками)
@@ -173,8 +198,8 @@ restaurant_orders/
 ├── output/, logs/              # результати й журнал імпорту (не комітяться)
 ├── src/restaurant_orders/
 │   ├── __init__.py
-│   ├── main.py                 # головна точка входу: поточна лабораторна (ЛР6, сценарій замовлення)
-│   ├── flow.py                 # імпорт → замовлення → оплата → доставка (ЛР6)
+│   ├── main.py                 # головна точка входу: поточна лабораторна (ЛР7, база даних)
+│   ├── flow.py, flow_app.py    # сценарій замовлення ЛР6 (логіка і застосунок)
 │   ├── console.py              # консольне меню (ЛР1)
 │   ├── models.py               # Dish, Order (ЛР1), OrderItemRecord, OrderSummary (ЛР3)
 │   ├── services.py             # business logic (ЛР1)
@@ -199,6 +224,13 @@ restaurant_orders/
 │   │   ├── delivery.py         # асинхронна доставка (ЛР6)
 │   │   ├── demo.py             # демонстрація ЛР4
 │   │   └── experiments.py      # DI, inheritance vs composition
+│   ├── persistence/            # база даних (ЛР7)
+│   │   ├── database.py         # engine, sessions, DATABASE_URL, PRAGMA foreign_keys
+│   │   ├── models.py           # ORM: Category, Dish, Order, OrderItem
+│   │   ├── repositories.py     # Category/Dish/OrderRepository
+│   │   ├── services.py         # OrderService: транзакції, SUM, AVG, GROUP BY
+│   │   ├── dbapi.py            # sqlite3 + параметризований запит
+│   │   └── migrations.py       # запуск Alembic із Python
 │   └── data_io/                # надійний імпорт/експорт (ЛР5)
 │       ├── exceptions.py       # ApplicationError і нащадки
 │       ├── config.py           # AppConfig, load_config (YAML)
@@ -214,5 +246,5 @@ restaurant_orders/
 └── tests/
     ├── conftest.py                           # спільні fixtures (ЛР6)
     ├── unit/                                 # тести ЛР1–5 (unittest) і нові pytest-тести ЛР6
-    └── integration/                          # import pipeline, order flow, консольні застосунки (ЛР6)
+    └── integration/                          # import pipeline, order flow, застосунки (ЛР6), база даних (ЛР7)
 ```
