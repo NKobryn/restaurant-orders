@@ -1,0 +1,5 @@
+{"order_id": 201, "dish": "Борщ", "category": "Перші страви", "price": 95.0, "quantity": 1}
+{"order_id": 201, "dish": "Узвар", "category": "Напої", "price": 45.0, "quantity": 2}
+{"order_id": 202, "dish": "Стейк", "category": "Основні страви", "price": 280.0, "quantity": 1}
+{"order_id": 202, "dish": "Піца", "category": "Італійська кухня", "price": 190.0, "quantity": 1}
+{"order_id": 203, "dish": "Тірамісу", "category": "Десерти", "price": 110.0, "quantity": 2}
