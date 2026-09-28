@@ -18,7 +18,8 @@ class Category(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(50), unique=True)
 
-    dishes: Mapped[list["Dish"]] = relationship(back_populates="category")
+    # passive_deletes="all": the ORM does not touch dishes, so ON DELETE RESTRICT of the database decides
+    dishes: Mapped[list["Dish"]] = relationship(back_populates="category", passive_deletes="all")
 
 
 class Dish(Base):

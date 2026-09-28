@@ -36,6 +36,8 @@ class OrderService:
         try:
             if not items:
                 raise OrderPlacementError(f"Замовлення №{order_id} порожнє.")
+            if self.orders.get(order_id) is not None:
+                raise OrderPlacementError(f"Замовлення №{order_id} вже існує.")
             order = Order(id=order_id)
             for name, quantity in items:
                 dish = self.dishes.get_by_name(name)
