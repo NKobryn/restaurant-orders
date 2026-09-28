@@ -6,6 +6,7 @@ from pathlib import Path
 from unittest.mock import Mock, create_autospec
 
 import pytest
+from sqlalchemy.orm import Session
 
 from restaurant_orders.domain.models import Dish, Menu, Order
 from restaurant_orders.domain.pricing import CategoryDiscount, NoDiscount, PricingPolicy
@@ -126,3 +127,30 @@ def import_files(tmp_path: Path) -> Callable[..., Path]:
         return config
 
     return create
+
+
+@pytest.fixture
+def db_session() -> Iterator[Session]:
+    """Separate test database: a new empty in-memory SQLite database for every test."""
+    from restaurant_orders.persistence.database import Base, create_database_engine, create_session_factory
+
+    engine = create_database_engine("sqlite://")
+    Base.metadata.create_all(engine)
+    session = create_session_factory(engine)()
+    yield session
+    session.close()
+    engine.dispose()
+
+
+@pytest.fixture
+def menu_session(db_session: Session) -> Session:
+    """Test database with four dishes of three categories."""
+    from restaurant_orders.persistence.repositories import CategoryRepository, DishRepository
+
+    categories, dishes = CategoryRepository(db_session), DishRepository(db_session)
+    for name, category, price in (("Борщ", "Перші страви", 95.0), ("Стейк", "Основні страви", 280.0),
+                                  ("Деруни", "Основні страви", 110.0), ("Узвар", "Напої", 45.0)):
+        dishes.add(name, categories.get_or_create(category), price)
+    db_session.commit()
+    return db_session
+
