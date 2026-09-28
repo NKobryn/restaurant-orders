@@ -34,3 +34,29 @@ class Order:
     def add_dish(self, dish: Dish) -> None:
         """Add one dish to the order."""
         self.dishes.append(dish)
+
+
+@dataclass(slots=True, frozen=True)
+class OrderItemRecord:
+    """One order position with quantity, read from a stream of records."""
+
+    order_id: int
+    dish: str
+    category: str
+    price: float
+    quantity: int
+
+    def __post_init__(self) -> None:
+        if self.order_id <= 0:
+            raise ValueError("Номер замовлення має бути додатним.")
+        if not self.dish:
+            raise ValueError("Назва страви не може бути порожньою.")
+        if self.price <= 0:
+            raise ValueError("Ціна має бути більшою за нуль.")
+        if self.quantity <= 0:
+            raise ValueError("Кількість має бути більшою за нуль.")
+
+    @property
+    def line_total(self) -> float:
+        """Return the price of the position for the whole quantity."""
+        return self.price * self.quantity
