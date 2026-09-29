@@ -1,13 +1,22 @@
-"""Measurement tools for laboratory work 9: repeated benchmarks, speedup, CSV results and text charts."""
+"""Measurement tools for laboratory work 9: benchmarks, speedup, CSV results, text charts, cProfile and tracemalloc.
 
+Profile of the order history statistics: python -m restaurant_orders.profiling
+"""
+
+import cProfile
 import csv
+import io
+import pstats
 import timeit
+import tracemalloc
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from statistics import mean
 from time import perf_counter
 from typing import Any
+
+from restaurant_orders.analytics import generate_order_history, menu_by_name, statistics_python
 
 RESULT_FIELDS = ["experiment", "dataset", "method", "workers", "run1", "run2", "run3", "run4", "run5", "mean", "speedup"]
 
@@ -89,3 +98,60 @@ def bar_chart(values: dict[str, float], unit: str, width: int = 40) -> list[str]
         bar = "█" * max(1, round(value / largest * width))
         lines.append(f"{label:<{label_width}} │{bar} {value:.3f} {unit}")
     return lines
+
+
+def profile_call(function: Callable[..., Any], *args: Any, limit: int = 12) -> str:
+    """Profile one call with cProfile and return the pstats report sorted by cumulative time."""
+    profiler = cProfile.Profile()
+    profiler.enable()
+    function(*args)
+    profiler.disable()
+    stream = io.StringIO()
+    statistics = pstats.Stats(profiler, stream=stream)
+    statistics.strip_dirs().sort_stats("cumulative").print_stats(limit)
+    return stream.getvalue()
+
+
+def peak_memory(function: Callable[..., Any], *args: Any) -> tuple[Any, float, float]:
+    """Run function under tracemalloc; return (result, memory kept by the result in MB, peak memory in MB)."""
+    tracemalloc.start()
+    try:
+        result = function(*args)
+        current, peak = tracemalloc.get_traced_memory()
+    finally:
+        tracemalloc.stop()
+    return result, current / 1024**2, peak / 1024**2
+
+
+def top_allocations(function: Callable[..., Any], *args: Any, limit: int = 5) -> list[str]:
+    """Return the source lines that allocated the most memory while function was running."""
+    tracemalloc.start()
+    try:
+        result = function(*args)
+        snapshot = tracemalloc.take_snapshot()
+    finally:
+        tracemalloc.stop()
+    del result
+    lines = []
+    for stat in snapshot.statistics("lineno")[:limit]:
+        frame = stat.traceback[0]
+        lines.append(f"{Path(frame.filename).name}:{frame.lineno}: {stat.size / 1024**2:.1f} MB, блоків {stat.count}")
+    return lines
+
+
+def run_profile(size: int = 1_000_000) -> None:
+    """Profile the generation and the statistics of a large order history (time and memory)."""
+    menu = menu_by_name()
+    history, history_mb, generation_peak_mb = peak_memory(generate_order_history, size)
+    print(f"Історія: {size} замовлень, {len(history)} позицій")
+    print(f"tracemalloc: історія займає {history_mb:.1f} MB, пік під час генерації {generation_peak_mb:.1f} MB")
+    print(f"Найбільші виділення пам'яті (генерація {size // 10} замовлень):")
+    for line in top_allocations(generate_order_history, size // 10, limit=3):
+        print("  " + line)
+    _, _, statistics_peak_mb = peak_memory(statistics_python, history, menu)
+    print(f"tracemalloc: пік під час statistics_python {statistics_peak_mb:.2f} MB")
+    print(profile_call(statistics_python, history, menu))
+
+
+if __name__ == "__main__":
+    run_profile()
