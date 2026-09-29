@@ -1,7 +1,7 @@
-"""Main entry point: REST API demo of laboratory work 8 (FastAPI, Pydantic, HTTPX, asyncio).
+"""REST API demo of laboratory work 8 (FastAPI, Pydantic, HTTPX, asyncio).
 
 The API runs in the same process through httpx.ASGITransport, so no server or network is needed:
-python -m restaurant_orders.main   (a real server: uvicorn restaurant_orders.api.app:app)
+python -m restaurant_orders.api.demo   (a real server: uvicorn restaurant_orders.api.app:app)
 """
 
 import asyncio
