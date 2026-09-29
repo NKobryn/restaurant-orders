@@ -5,6 +5,7 @@ Run from the project root: python benchmarks/benchmark_threads.py
 
 import tempfile
 from pathlib import Path
+from typing import Any
 
 from restaurant_orders.analytics import generate_order_history, menu_by_name, statistics_python
 from restaurant_orders.parallel import (
@@ -24,7 +25,7 @@ REPEATS = 5
 LATENCY = 0.05
 
 
-def benchmark_statistics_threads(size: int) -> list[dict[str, object]]:
+def benchmark_statistics_threads(size: int) -> list[dict[str, Any]]:
     """CPU-bound statistics: Sequential against ThreadPoolExecutor."""
     menu = menu_by_name()
     history = generate_order_history(size)
@@ -38,7 +39,7 @@ def benchmark_statistics_threads(size: int) -> list[dict[str, object]]:
     return rows
 
 
-def benchmark_files(size: int, files: int, latency: float, experiment: str) -> list[dict[str, object]]:
+def benchmark_files(size: int, files: int, latency: float, experiment: str) -> list[dict[str, Any]]:
     """Reading order files: one after another against ThreadPoolExecutor."""
     history = generate_order_history(size)
     with tempfile.TemporaryDirectory() as directory:
