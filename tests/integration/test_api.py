@@ -5,9 +5,8 @@ from typing import Any
 
 import httpx
 import pytest
-from sqlalchemy.orm import Session
-
 from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
 
 from restaurant_orders.api.app import app
 
@@ -193,8 +192,8 @@ async def test_api_with_async_client(api_session_factory: Callable[[], Session])
 
 
 def test_rest_demo(tmp_path: Any, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
-    from restaurant_orders.api.dependencies import session_factory
     from restaurant_orders.api.demo import main
+    from restaurant_orders.api.dependencies import session_factory
 
     monkeypatch.setenv("DATABASE_URL", f"sqlite:///{tmp_path / 'demo.db'}")
     session_factory.cache_clear()

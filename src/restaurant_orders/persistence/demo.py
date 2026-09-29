@@ -100,8 +100,8 @@ def print_history(service: OrderService, orders: list[Order]) -> None:
         best = service.most_expensive_item(order.id)
         best_text = f"{best.dish.name} ({best.unit_price:.2f} грн)" if best else "—"
         print(
-            f"№{order.id} [{order.created_at:%Y-%m-%d %H:%M:%S}] {dishes}; сума {service.order_total(order.id):.2f} грн; "
-            f"найдорожча: {best_text}"
+            f"№{order.id} [{order.created_at:%Y-%m-%d %H:%M:%S}] {dishes}; "
+            f"сума {service.order_total(order.id):.2f} грн; найдорожча: {best_text}"
         )
     print(f"Середня вартість замовлення (AVG): {service.average_order_value():.2f} грн")
 

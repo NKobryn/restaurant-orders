@@ -1,4 +1,7 @@
-"""Statistics for restaurant orders: small demo orders (laboratory work 2) and a large order history (laboratory work 9)."""
+"""Statistics for restaurant orders.
+
+Small demo orders (laboratory work 2) and a large order history (laboratory work 9).
+"""
 
 import random
 from collections import Counter
@@ -246,5 +249,5 @@ class OrderHistory:
 
 @lru_cache(maxsize=32)
 def cached_statistics(history: OrderHistory, version: int) -> OrderStatistics:
-    """Statistics of the history; version is a part of the cache key, so a change of data means a new key (invalidation)."""
+    """Statistics of the history; version is a part of the cache key, so changed data get a new key (invalidation)."""
     return statistics_python(history.items, history.menu)
