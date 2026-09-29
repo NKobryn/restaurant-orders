@@ -1,20 +1,180 @@
 # Restaurant Orders
 
-Навчальний проєкт з курсу «Професійний Python», варіант №11 — «Облік замовлень ресторану».
-Проєкт розвивається від лабораторної до лабораторної:
+Облік замовлень ресторану — навчальний проєкт з курсу «Професійний Python», варіант №11.
+Сервіс веде меню (страви з назвою, категорією й ціною) і замовлення (номер і список страв): створює
+замовлення, додає й видаляє страви, рахує суму замовлення, знаходить найдорожчу страву й середній чек.
+Дані зберігаються в SQLite через SQLAlchemy та міграції Alembic, доступ — через REST API на FastAPI.
+Проєкт пакується як `restaurant-orders` (модуль `restaurant_orders`), запускається в Docker і
+перевіряється в GitHub Actions.
+
+![CI](https://github.com/NKobryn/restaurant-orders/actions/workflows/ci.yml/badge.svg)
+
+## Можливості
+
+- REST API: меню, категорії, замовлення, позиції, суми, статистика, `GET /health`;
+- база даних SQLite: ORM-моделі, repositories, транзакції, міграції Alembic (ЛР7);
+- валідація запитів Pydantic і структуровані помилки 404 / 409 / 422 (ЛР8);
+- аналітика великої історії замовлень із NumPy і кешем статистики (ЛР9);
+- конфігурація через змінні середовища або `.env`, logging з рівнем `LOG_LEVEL`;
+- Python package (wheel, sdist), Docker image з volume для бази, CI/CD на GitHub Actions.
+
+Архітектура:
+
+```text
+Client (curl, Swagger UI, httpx)
+   │
+   ▼
+FastAPI  api/app.py  (Pydantic-схеми, обробники помилок, /health)
+   │
+   ▼
+Service  persistence/services.py  (OrderService: транзакції, суми, статистика)
+   │
+   ▼
+Repository  persistence/repositories.py  (Category/Dish/OrderRepository)
+   │
+   ▼
+Database  SQLite (DATABASE_URL), схема — міграції Alembic
+```
+
+## Вимоги
+
+Python 3.11 або 3.12; для контейнера — Docker.
+
+## Встановлення
+
+```bash
+python -m venv .venv
+source .venv/bin/activate       # Linux/macOS
+# .venv\Scripts\activate        # Windows
+python -m pip install -e ".[dev]"   # застосунок + засоби розробки (pytest, mypy, ruff, build)
+```
+
+Встановлення готового пакета (wheel) без вихідного коду:
+
+```bash
+python -m build                                     # dist/restaurant_orders-<версія>-py3-none-any.whl і .tar.gz
+python -m venv /tmp/clean-env
+/tmp/clean-env/bin/pip install dist/restaurant_orders-*.whl
+/tmp/clean-env/bin/restaurant-orders                # сервіс на http://127.0.0.1:8000
+```
+
+## Конфігурація
+
+Налаштування читаються зі змінних середовища, а якщо їх немає — з файлу `.env` у поточній папці
+(`src/restaurant_orders/config.py`, pydantic-settings). Приклад без секретів — `.env.example`:
+
+```bash
+cp .env.example .env            # .env не потрапляє в Git (.gitignore)
+```
+
+| Змінна | За замовчуванням | Призначення |
+|---|---|---|
+| `APP_NAME` | `Restaurant Orders API` | назва сервісу в OpenAPI |
+| `ENVIRONMENT` | `development` | `development`, `test` або `production` (у development — auto-reload) |
+| `DATABASE_URL` | `sqlite:///restaurant.db` | адреса бази даних SQLAlchemy |
+| `LOG_LEVEL` | `INFO` | `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL` |
+| `HOST`, `PORT` | `127.0.0.1`, `8000` | адреса й порт сервера |
+
+Секретів (паролів, токенів, ключів) проєкт не має; якщо з'являться — лише через змінні середовища,
+`.env` або GitHub Secrets, ніколи в коді, README, Dockerfile чи Git.
+
+## Запуск локально
+
+```bash
+restaurant-orders               # або python -m restaurant_orders.main
+LOG_LEVEL=DEBUG ENVIRONMENT=production restaurant-orders   # інша конфігурація без зміни коду
+```
+
+`restaurant-orders` налаштовує logging, застосовує міграції (`alembic upgrade head`; без `alembic.ini` поруч —
+створює таблиці) і запускає uvicorn. Документація API: http://127.0.0.1:8000/docs (Swagger UI),
+http://127.0.0.1:8000/redoc, схема — http://127.0.0.1:8000/openapi.json.
+
+## Docker
+
+```bash
+docker build -t restaurant-orders:1.0.0 .
+docker run -d --name restaurant-orders -p 8000:8000 \
+    -v restaurant_data:/app/data \
+    -e ENVIRONMENT=production -e LOG_LEVEL=INFO \
+    restaurant-orders:1.0.0
+curl http://127.0.0.1:8000/health         # {"status":"ok","environment":"production"}
+docker logs restaurant-orders
+docker stop restaurant-orders && docker rm restaurant-orders
+```
+
+Dockerfile — multi-stage build (стадія `builder` збирає wheel, фінальний образ встановлює лише wheel),
+користувач без прав root `appuser`, `HEALTHCHECK` на `/health`, міграції при старті контейнера.
+База SQLite — `DATABASE_URL=sqlite:////app/data/restaurant.db` у volume `/app/data`, тому дані
+зберігаються після перезапуску контейнера.
+
+## REST API
+
+| Метод | Шлях | Що робить |
+|---|---|---|
+| GET | `/health` | стан сервісу й environment (200) |
+| GET | `/dishes?category=&sort=&limit=&offset=` | меню з фільтром, сортуванням, пагінацією |
+| GET / POST | `/dishes/{id}`, `/dishes` | страва; нова страва (201) |
+| PATCH / DELETE | `/dishes/{id}` | зміна ціни чи категорії; видалення (204, 409 якщо є в замовленнях) |
+| GET | `/categories` | категорії з кількістю страв |
+| GET / POST | `/orders?limit=&offset=`, `/orders` | історія; нове замовлення однією транзакцією (201) |
+| GET | `/orders/{id}`, `/orders/{id}/total` | замовлення з найдорожчою позицією; сума |
+| POST / DELETE | `/orders/{id}/items`, `/orders/{id}/items/{item_id}` | додати (201) / видалити (204) позицію |
+| GET | `/orders/statistics` | кількість, середня вартість, виручка за категоріями |
+
+Приклад:
+
+```bash
+curl -X POST http://127.0.0.1:8000/dishes -H "Content-Type: application/json" \
+     -d '{"name": "Борщ", "category": "Перші страви", "price": 95}'
+curl -X POST http://127.0.0.1:8000/orders -H "Content-Type: application/json" \
+     -d '{"id": 1, "items": [{"dish": "Борщ", "quantity": 2}]}'
+curl http://127.0.0.1:8000/orders/1/total    # {"order_id":1,"items_count":1,"total":190.0}
+```
+
+## Тести і якість коду
+
+```bash
+ruff check .                          # lint (pycodestyle, pyflakes, isort)
+ruff format --check .                 # форматування
+mypy                                  # strict type checking (src і benchmarks)
+pytest -v                             # увесь test suite (unit + integration)
+pytest --cov                          # statement + branch coverage, поріг 80 %
+```
+
+## CI/CD
+
+`.github/workflows/ci.yml` запускається на кожен push у `main`, на теги `v*` і pull requests:
+
+1. **quality** (Python 3.11 і 3.12): `ruff check .`, `ruff format --check .`, `mypy`, `pytest -v --cov` (поріг 80 %);
+2. **build**: `python -m build`, перелік `dist/`, встановлення wheel у чистий venv, артефакт `dist`;
+3. **docker**: `docker build`, запуск контейнера і перевірка `GET /health`.
+
+Зелений pipeline означає, що всі три jobs пройшли.
+
+## Сценарій демонстрації
+
+1. `pytest -v`, `ruff check .`, `mypy` — тести й якість коду.
+2. `python -m build` — wheel і sdist у `dist/`.
+3. `docker build -t restaurant-orders:1.0.0 .` і `docker run …` (розділ Docker).
+4. http://127.0.0.1:8000/health і http://127.0.0.1:8000/docs — створити страви Борщ і Узвар,
+   замовлення №1 (Борщ × 2, Узвар), подивитися `GET /orders/1` (найдорожча страва) і `GET /orders/1/total`.
+5. `docker rm -f restaurant-orders`, знову `docker run …` з тим самим volume — меню й замовлення збереглися.
+6. GitHub → Actions: зелений pipeline.
+
+## Розвиток проєкту (ЛР1–10)
 
 - лабораторна робота №1 — структура проєкту, моделі, business logic, консольне меню;
 - лабораторна робота №2 — аналіз замовлень за допомогою структур даних Python;
 - лабораторна робота №3 — потокова обробка великих CSV-файлів замовлень (iterators, generators, itertools);
 - лабораторна робота №4 — типізована ООП-модель ресторану (dataclass, ABC, Protocol, Generic, SOLID, mypy);
 - лабораторна робота №5 — надійний імпорт/експорт замовлень (exceptions, context managers, logging, CSV/JSON/YAML);
-- лабораторна робота №6 — автоматизоване тестування (pytest, fixtures, mocks, AsyncMock, coverage) і повний сценарій замовлення;
+- лабораторна робота №6 — автоматизоване тестування (pytest, fixtures, mocks, AsyncMock, coverage);
 - лабораторна робота №7 — база даних SQLite: SQLAlchemy ORM, repositories, транзакції, DB-API, міграції Alembic;
-- лабораторна робота №8 — REST API на FastAPI, Pydantic, асинхронний клієнт HTTPX (Task, gather, Semaphore, timeout, retry);
-- лабораторна робота №9 — профілювання й оптимізація статистики великої історії замовлень (cProfile, tracemalloc,
-  threading, multiprocessing, ThreadPoolExecutor, ProcessPoolExecutor, NumPy, caching).
+- лабораторна робота №8 — REST API на FastAPI, Pydantic, асинхронний клієнт HTTPX;
+- лабораторна робота №9 — профілювання й оптимізація (cProfile, tracemalloc, threads, processes, NumPy, caching);
+- лабораторна робота №10 — production: configuration, packaging, Docker, CI/CD.
 
-## Можливості
+Можливості ЛР1 (консольний застосунок):
 
 - створення замовлень і додавання страв;
 - підрахунок суми кожного замовлення;
@@ -109,31 +269,9 @@
   `cProfile` + `pstats`, `tracemalloc`;
 - `benchmarks/`: експерименти й таблиці результатів (`benchmarks/results/benchmark_results.csv`).
 
-## Вимоги
+### Запуск демонстрацій ЛР1–9
 
-Python 3.11 або новішої версії.
-
-## Встановлення
-
-```bash
-python -m venv .venv
-source .venv/bin/activate       # Linux/macOS
-# .venv\Scripts\activate        # Windows
-python -m pip install -e ".[dev]"   # PyYAML, SQLAlchemy, Alembic, FastAPI, Uvicorn, HTTPX, NumPy + засоби розробки
-```
-
-## Запуск
-
-Головна точка входу — поточна лабораторна робота (№9): статистика історії 1 000 000 замовлень усіма
-реалізаціями (Sequential, потоки, процеси, NumPy) з перевіркою однакового результату, читання файлів потоками,
-кеш і Lock. Те саме запускає команда `restaurant-orders`:
-
-```bash
-python -m restaurant_orders.main
-```
-
-Експерименти лабораторної роботи №9 (5 повторів кожного виміру; результати дописуються в
-`benchmarks/results/benchmark_results.csv`) і профіль:
+Експерименти лабораторної роботи №9 і профіль:
 
 ```bash
 python benchmarks/benchmark_statistics.py   # усі реалізації для 3 розмірів даних + cold/warm cache
@@ -141,6 +279,12 @@ python benchmarks/benchmark_threads.py      # потоки: CPU-bound (GIL), ч�
 python benchmarks/benchmark_processes.py    # процеси: 1, 2, 4, 8 workers, серіалізація, файли
 python benchmarks/benchmark_numpy.py        # NumPy: час і пам'ять list проти масивів
 python -m restaurant_orders.profiling       # cProfile і tracemalloc до та після оптимізації
+```
+
+Демонстрація оптимізації лабораторної роботи №9:
+
+```bash
+python -m restaurant_orders.optimization_demo
 ```
 
 Демонстрація REST API лабораторної роботи №8 (база `restaurant.db` створюється заново):
@@ -230,25 +374,15 @@ python -m restaurant_orders.stream.main
 python -m restaurant_orders.stream.experiment
 ```
 
-## Тести і перевірка типів
-
-```bash
-pytest                                # увесь test suite (unit + integration)
-pytest -v -m integration              # лише інтеграційні тести
-pytest --cov                          # statement + branch coverage, поріг 80 %
-pytest --cov --cov-report=html        # HTML-звіт у htmlcov/index.html
-mypy                                  # налаштування strict у pyproject.toml
-```
-
-Експерименти з тестування: `experiments/testing/README.md`.
-
 ## Структура проєкту
 
 ```text
 restaurant_orders/
-├── pyproject.toml
-├── README.md
-├── .gitignore
+├── pyproject.toml              # metadata, залежності, ruff, mypy, pytest, coverage
+├── README.md, LICENSE, CHANGELOG.md
+├── .gitignore, .env.example    # налаштування без секретів (ЛР10)
+├── Dockerfile, .dockerignore   # образ сервісу (ЛР10)
+├── .github/workflows/ci.yml    # CI/CD (ЛР10)
 ├── config.yaml                 # конфігурація імпорту (ЛР5)
 ├── alembic.ini, migrations/    # міграції бази даних (ЛР7)
 ├── data/
@@ -258,7 +392,9 @@ restaurant_orders/
 ├── output/, logs/              # результати й журнал імпорту (не комітяться)
 ├── src/restaurant_orders/
 │   ├── __init__.py
-│   ├── main.py                 # головна точка входу: поточна лабораторна (ЛР9, оптимізація)
+│   ├── main.py                 # головна точка входу: production-сервіс (ЛР10)
+│   ├── config.py               # Settings, get_settings, configure_logging (ЛР10)
+│   ├── optimization_demo.py    # демонстрація ЛР9
 │   ├── flow.py, flow_app.py    # сценарій замовлення ЛР6 (логіка і застосунок)
 │   ├── console.py              # консольне меню (ЛР1)
 │   ├── models.py               # Dish, Order (ЛР1), OrderItemRecord, OrderSummary (ЛР3)
@@ -320,5 +456,7 @@ restaurant_orders/
     ├── conftest.py                           # спільні fixtures (ЛР6)
     ├── unit/                                 # тести ЛР1–5 (unittest) і нові pytest-тести ЛР6
     ├── integration/                          # ЛР6, база даних (ЛР7), API і async-клієнт (ЛР8)
-    └── test_parallel.py                      # правильність оптимізацій, Lock, кеш, вимірювання (ЛР9)
+    ├── test_parallel.py                      # правильність оптимізацій, Lock, кеш, вимірювання (ЛР9)
+    ├── test_config.py                        # налаштування зі змінних середовища (ЛР10)
+    └── test_main.py                          # production-запуск: міграції, uvicorn (ЛР10)
 ```
