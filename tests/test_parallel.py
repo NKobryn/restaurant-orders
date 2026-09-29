@@ -219,3 +219,15 @@ def test_profile_and_memory(menu: dict[str, Dish]) -> None:
     assert len(history) > 2_000 and 0 < current_mb <= peak_mb
     allocations: list[Any] = top_allocations(generate_order_history, 2_000, limit=2)
     assert len(allocations) == 2 and "analytics.py" in allocations[0]
+
+
+def test_optimization_demo(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    from restaurant_orders import main as demo
+
+    monkeypatch.setattr(demo, "HISTORY_SIZE", 2_000)
+    demo.main()
+    output = capsys.readouterr().out
+    assert "суми: №1 — 235.00 грн, №2 — 430.00 грн; середня вартість: 332.50 грн; найдорожче — №2" in output
+    assert output.count("результат збігається: так") == 6
+    assert "дані збігаються: так" in output
+    assert "з Lock: 4000" in output
