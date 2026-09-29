@@ -80,11 +80,11 @@ def update_results_csv(path: Path, experiment: str, rows: list[dict[str, Any]]) 
 
 def print_table(rows: list[dict[str, Any]]) -> None:
     """Print result rows as a text table."""
-    print(f"{'Dataset':>9} | {'Method':<22} | {'Workers':>7} | {'Runs, s':<39} | {'Mean, s':>8} | {'Speedup':>7}")
+    print(f"{'Dataset':>9} | {'Method':<24} | {'Workers':>7} | {'Runs, s':<39} | {'Mean, s':>8} | {'Speedup':>7}")
     for row in rows:
         runs = " ".join(str(row.get(f"run{number}", "")) for number in range(1, 6))
         print(
-            f"{row['dataset']:>9} | {row['method']:<22} | {row['workers']:>7} | {runs:<39} | "
+            f"{row['dataset']:>9} | {row['method']:<24} | {row['workers']:>7} | {runs:<39} | "
             f"{row['mean']:>8} | {row['speedup'] + '×':>7}"
         )
 
