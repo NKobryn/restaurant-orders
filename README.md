@@ -9,7 +9,8 @@
 - лабораторна робота №4 — типізована ООП-модель ресторану (dataclass, ABC, Protocol, Generic, SOLID, mypy);
 - лабораторна робота №5 — надійний імпорт/експорт замовлень (exceptions, context managers, logging, CSV/JSON/YAML);
 - лабораторна робота №6 — автоматизоване тестування (pytest, fixtures, mocks, AsyncMock, coverage) і повний сценарій замовлення;
-- лабораторна робота №7 — база даних SQLite: SQLAlchemy ORM, repositories, транзакції, DB-API, міграції Alembic.
+- лабораторна робота №7 — база даних SQLite: SQLAlchemy ORM, repositories, транзакції, DB-API, міграції Alembic;
+- лабораторна робота №8 — REST API на FastAPI, Pydantic, асинхронний клієнт HTTPX (Task, gather, Semaphore, timeout, retry).
 
 ## Можливості
 
@@ -78,6 +79,23 @@
 - міграції Alembic: `0001` — створення таблиць, `0002` — `orders.created_at` (upgrade і downgrade);
 - `DATABASE_URL` задає базу (за замовчуванням `sqlite:///restaurant.db`).
 
+Лабораторна робота №8 (REST API, пакет `restaurant_orders.api`):
+
+| Метод | Шлях | Що робить |
+|---|---|---|
+| GET | `/dishes?category=&sort=&limit=&offset=` | меню з фільтром, сортуванням, пагінацією |
+| GET / POST | `/dishes/{id}`, `/dishes` | страва; нова страва (201) |
+| PATCH / DELETE | `/dishes/{id}` | зміна ціни чи категорії; видалення (204, 409 якщо є в замовленнях) |
+| GET | `/categories` | категорії з кількістю страв |
+| GET / POST | `/orders?limit=&offset=`, `/orders` | історія; нове замовлення однією транзакцією (201) |
+| GET | `/orders/{id}`, `/orders/{id}/total` | замовлення з найдорожчою позицією; сума |
+| POST / DELETE | `/orders/{id}/items`, `/orders/{id}/items/{item_id}` | додати (201) / видалити (204) позицію |
+| GET | `/orders/statistics` | кількість, середня вартість, виручка за категоріями |
+
+- Pydantic-схеми з валідацією (422), структуровані помилки `{"status", "error", "detail"}` (404, 409, 422);
+- `api/client.py`: паралельне отримання сум замовлень — `asyncio.create_task` + `gather`, `Semaphore`,
+  timeout (`asyncio.wait_for`), retry з експоненційною затримкою (`RetryPolicy`).
+
 ## Вимоги
 
 Python 3.11 або новішої версії.
@@ -88,18 +106,30 @@ Python 3.11 або новішої версії.
 python -m venv .venv
 source .venv/bin/activate       # Linux/macOS
 # .venv\Scripts\activate        # Windows
-python -m pip install -e ".[dev]"   # PyYAML, SQLAlchemy, Alembic, а також mypy, types-PyYAML, pytest, pytest-cov
+python -m pip install -e ".[dev]"   # PyYAML, SQLAlchemy, Alembic, FastAPI, Uvicorn, HTTPX + засоби розробки
 ```
 
 ## Запуск
 
-Головна точка входу — поточна лабораторна робота (№7): демонстрація бази даних. Щоразу створює базу
-`restaurant.db` заново (міграції Alembic), показує схему, CRUD страв, транзакції з rollback, історію замовлень,
-агрегати й пошук через DB-API. Те саме запускає команда `restaurant-orders`:
+Головна точка входу — поточна лабораторна робота (№8): демонстрація REST API. Створює базу `restaurant.db`
+заново, запускає API в тому самому процесі (`httpx.ASGITransport`) і надсилає HTTP-запити: CRUD, замовлення,
+помилки, паралельні запити, retry і timeout. Те саме запускає команда `restaurant-orders`:
 
 ```bash
 python -m restaurant_orders.main
-DATABASE_URL=sqlite:///інша.db python -m restaurant_orders.main
+```
+
+Справжній HTTP-сервер і Swagger UI (http://127.0.0.1:8000/docs):
+
+```bash
+alembic upgrade head
+uvicorn restaurant_orders.api.app:app --reload
+```
+
+Демонстрація бази даних лабораторної роботи №7:
+
+```bash
+python -m restaurant_orders.persistence.demo
 ```
 
 Міграції вручну (Alembic):
@@ -198,7 +228,7 @@ restaurant_orders/
 ├── output/, logs/              # результати й журнал імпорту (не комітяться)
 ├── src/restaurant_orders/
 │   ├── __init__.py
-│   ├── main.py                 # головна точка входу: поточна лабораторна (ЛР7, база даних)
+│   ├── main.py                 # головна точка входу: поточна лабораторна (ЛР8, REST API)
 │   ├── flow.py, flow_app.py    # сценарій замовлення ЛР6 (логіка і застосунок)
 │   ├── console.py              # консольне меню (ЛР1)
 │   ├── models.py               # Dish, Order (ЛР1), OrderItemRecord, OrderSummary (ЛР3)
@@ -224,7 +254,13 @@ restaurant_orders/
 │   │   ├── delivery.py         # асинхронна доставка (ЛР6)
 │   │   ├── demo.py             # демонстрація ЛР4
 │   │   └── experiments.py      # DI, inheritance vs composition
-│   ├── persistence/            # база даних (ЛР7)
+│   ├── api/                    # REST API (ЛР8)
+│   │   ├── app.py              # FastAPI: endpoints, обробники помилок
+│   │   ├── schemas.py          # Pydantic-схеми
+│   │   ├── dependencies.py     # сесія БД через Depends
+│   │   ├── client.py           # httpx.AsyncClient: gather, Semaphore, timeout, retry
+│   │   └── transports.py       # транспорти для демонстрації затримки й збоїв
+│   ├── persistence/            # база даних (ЛР7), demo.py — демо ЛР7
 │   │   ├── database.py         # engine, sessions, DATABASE_URL, PRAGMA foreign_keys
 │   │   ├── models.py           # ORM: Category, Dish, Order, OrderItem
 │   │   ├── repositories.py     # Category/Dish/OrderRepository
@@ -246,5 +282,5 @@ restaurant_orders/
 └── tests/
     ├── conftest.py                           # спільні fixtures (ЛР6)
     ├── unit/                                 # тести ЛР1–5 (unittest) і нові pytest-тести ЛР6
-    └── integration/                          # import pipeline, order flow, застосунки (ЛР6), база даних (ЛР7)
+    └── integration/                          # ЛР6, база даних (ЛР7), API і async-клієнт (ЛР8)
 ```
