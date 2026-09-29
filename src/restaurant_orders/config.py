@@ -30,8 +30,5 @@ def get_settings() -> Settings:
 
 def configure_logging(settings: Settings) -> None:
     """Configure logging of the whole application with LOG_LEVEL."""
-    logging.basicConfig(
-        level=settings.log_level,
-        format="%(asctime)s %(levelname)s %(name)s %(message)s",
-        force=True,
-    )
+    logging.basicConfig(format="%(asctime)s %(levelname)s %(name)s %(message)s")
+    logging.getLogger().setLevel(settings.log_level)
