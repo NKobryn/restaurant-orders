@@ -14,6 +14,14 @@ class OrderPlacementError(Exception):
     """The order cannot be saved; nothing was written to the database."""
 
 
+class UnknownDishError(OrderPlacementError):
+    """The requested dish is not on the menu."""
+
+
+class DuplicateOrderError(OrderPlacementError):
+    """An order with this number already exists."""
+
+
 @dataclass(frozen=True, slots=True)
 class CategoryStatistics:
     """How many portions of a category were ordered and for how much."""
@@ -37,12 +45,12 @@ class OrderService:
             if not items:
                 raise OrderPlacementError(f"Замовлення №{order_id} порожнє.")
             if self.orders.get(order_id) is not None:
-                raise OrderPlacementError(f"Замовлення №{order_id} вже існує.")
+                raise DuplicateOrderError(f"Замовлення №{order_id} вже існує.")
             order = Order(id=order_id)
             for name, quantity in items:
                 dish = self.dishes.get_by_name(name)
                 if dish is None:
-                    raise OrderPlacementError(f"Страви «{name}» немає в меню.")
+                    raise UnknownDishError(f"Страви «{name}» немає в меню.")
                 order.items.append(OrderItem(dish=dish, quantity=quantity, unit_price=dish.price))
             self.orders.add(order)
             self.session.commit()
@@ -59,7 +67,7 @@ class OrderService:
         order = self.orders.get(order_id)
         dish = self.dishes.get_by_name(name)
         if order is None or dish is None:
-            raise OrderPlacementError(f"Немає замовлення №{order_id} або страви «{name}».")
+            raise UnknownDishError(f"Немає замовлення №{order_id} або страви «{name}».")
         item = OrderItem(dish=dish, quantity=quantity, unit_price=dish.price)
         order.items.append(item)
         try:
@@ -75,6 +83,15 @@ class OrderService:
         removed = dish is not None and self.orders.remove_item(order_id, dish.id)
         self.session.commit()
         return removed
+
+    def remove_item(self, order_id: int, item_id: int) -> bool:
+        """Delete an order item by its id and commit."""
+        item = self.orders.get_item(order_id, item_id)
+        if item is None:
+            return False
+        item.order.items.remove(item)
+        self.session.commit()
+        return True
 
     def order_total(self, order_id: int) -> float:
         """SUM(quantity * unit_price) of one order."""

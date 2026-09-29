@@ -1,6 +1,6 @@
 """Repositories: the only place that reads and writes rows of the database."""
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
 
 from restaurant_orders.persistence.models import Category, Dish, Order, OrderItem
@@ -14,6 +14,16 @@ class CategoryRepository:
 
     def get_by_name(self, name: str) -> Category | None:
         return self.session.scalar(select(Category).where(Category.name == name))
+
+    def list_with_counts(self) -> list[tuple[Category, int]]:
+        """Categories with the number of dishes (LEFT JOIN + GROUP BY)."""
+        statement = (
+            select(Category, func.count(Dish.id))
+            .outerjoin(Dish, Dish.category_id == Category.id)
+            .group_by(Category.id)
+            .order_by(Category.name)
+        )
+        return [(category, int(count)) for category, count in self.session.execute(statement)]
 
     def get_or_create(self, name: str) -> Category:
         """Return the category with the name, creating it if needed."""
@@ -45,9 +55,17 @@ class DishRepository:
     def get_by_name(self, name: str) -> Dish | None:
         return self.session.scalar(select(Dish).where(Dish.name == name))
 
-    def list(self, category: str | None = None, limit: int = 100, offset: int = 0) -> list[Dish]:
-        """Read: dishes sorted by price (most expensive first), optionally of one category, page by page."""
-        statement = select(Dish).join(Dish.category).order_by(Dish.price.desc(), Dish.name)
+    SORTING = {
+        "price_desc": (Dish.price.desc(), Dish.name),
+        "price_asc": (Dish.price.asc(), Dish.name),
+        "name": (Dish.name,),
+    }
+
+    def list(
+        self, category: str | None = None, limit: int = 100, offset: int = 0, sort: str = "price_desc"
+    ) -> list[Dish]:
+        """Read: dishes of one category or all, sorted (price_desc, price_asc, name), page by page."""
+        statement = select(Dish).join(Dish.category).order_by(*self.SORTING[sort])
         if category is not None:
             statement = statement.where(Category.name == category)
         return list(self.session.scalars(statement.limit(limit).offset(offset)))
@@ -84,14 +102,24 @@ class OrderRepository:
     def get(self, order_id: int) -> Order | None:
         return self.session.get(Order, order_id)
 
-    def history(self) -> list[Order]:
-        """All orders with their items, from the oldest to the newest (created_at, then number)."""
+    def history(self, limit: int | None = None, offset: int = 0) -> list[Order]:
+        """Orders with their items, from the oldest to the newest (created_at, then number)."""
         statement = (
             select(Order)
             .options(selectinload(Order.items).selectinload(OrderItem.dish))
             .order_by(Order.created_at, Order.id)
+            .limit(limit)
+            .offset(offset)
         )
         return list(self.session.scalars(statement))
+
+    def count(self) -> int:
+        """Number of orders."""
+        return int(self.session.scalar(select(func.count()).select_from(Order)) or 0)
+
+    def get_item(self, order_id: int, item_id: int) -> OrderItem | None:
+        """Find an item that belongs to the order."""
+        return self.session.scalar(select(OrderItem).where(OrderItem.id == item_id, OrderItem.order_id == order_id))
 
     def remove_item(self, order_id: int, dish_id: int) -> bool:
         """Delete one dish from an order; return False if it was not there."""
