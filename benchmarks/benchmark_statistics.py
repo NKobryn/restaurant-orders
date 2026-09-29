@@ -8,7 +8,7 @@ import platform
 from pathlib import Path
 
 from restaurant_orders.analytics import generate_order_history, menu_by_name, statistics_python
-from restaurant_orders.parallel import statistics_threads
+from restaurant_orders.parallel import statistics_processes, statistics_threads
 from restaurant_orders.profiling import bar_chart, benchmark_repeated, print_table, result_row, update_results_csv
 
 RESULTS = Path(__file__).parent / "results" / "benchmark_results.csv"
@@ -29,6 +29,11 @@ def main() -> None:
         threads = benchmark_repeated("ThreadPoolExecutor", statistics_threads, history, menu, WORKERS, repeats=REPEATS)
         assert threads.result == baseline.result
         rows.append(result_row("statistics", size, threads, WORKERS, baseline.mean))
+        processes = benchmark_repeated(
+            "ProcessPoolExecutor", statistics_processes, history, menu, WORKERS, repeats=REPEATS
+        )
+        assert processes.result == baseline.result
+        rows.append(result_row("statistics", size, processes, WORKERS, baseline.mean))
     print_table(rows)
     for size in SIZES:
         print(f"Час виконання, {size} замовлень:")

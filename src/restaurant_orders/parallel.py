@@ -1,9 +1,10 @@
 """Parallel processing of the order history: threads, processes and synchronization (laboratory work 9)."""
 
 import csv
+import multiprocessing
 import threading
 import time
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from pathlib import Path
 
 from restaurant_orders.analytics import (
@@ -61,6 +62,36 @@ def statistics_threads(history: list[HistoryItem], menu: dict[str, Dish], worker
     with ThreadPoolExecutor(max_workers=workers) as executor:
         parts = list(executor.map(partial_statistics, chunks, [menu] * len(chunks)))
     return merge_statistics(parts, menu)
+
+
+def statistics_processes(history: list[HistoryItem], menu: dict[str, Dish], workers: int = 4) -> OrderStatistics:
+    """Statistics with ProcessPoolExecutor: every process aggregates its part on its own CPU core."""
+    chunks = split_by_orders(history, workers)
+    with ProcessPoolExecutor(max_workers=workers) as executor:
+        parts = list(executor.map(partial_statistics, chunks, [menu] * len(chunks)))
+    return merge_statistics(parts, menu)
+
+
+def _process_worker(
+    index: int, history: list[HistoryItem], menu: dict[str, Dish], results: "multiprocessing.Queue[tuple[int, PartialStatistics]]"
+) -> None:
+    results.put((index, partial_statistics(history, menu)))
+
+
+def statistics_multiprocessing(history: list[HistoryItem], menu: dict[str, Dish], workers: int = 4) -> OrderStatistics:
+    """Statistics with multiprocessing.Process objects that send partial results through a Queue."""
+    chunks = split_by_orders(history, workers)
+    results: "multiprocessing.Queue[tuple[int, PartialStatistics]]" = multiprocessing.Queue()
+    processes = [
+        multiprocessing.Process(target=_process_worker, args=(index, chunk, menu, results))
+        for index, chunk in enumerate(chunks)
+    ]
+    for process in processes:
+        process.start()
+    parts = dict(results.get() for _ in processes)
+    for process in processes:
+        process.join()
+    return merge_statistics([parts[index] for index in range(len(chunks))], menu)
 
 
 # --- Files of orders (I/O) -------------------------------------------------------------------
@@ -130,6 +161,23 @@ def load_files_threads(
         for items in loaded:
             history.extend(items)
     return history
+
+
+def file_statistics(path: Path, menu: dict[str, Dish]) -> PartialStatistics:
+    """Read one file and aggregate it; only the small partial result goes back to the main process."""
+    return partial_statistics(load_order_file(path), menu)
+
+
+def statistics_from_files(paths: list[Path], menu: dict[str, Dish]) -> OrderStatistics:
+    """Read and aggregate the files one after another."""
+    return merge_statistics([file_statistics(path, menu) for path in paths], menu)
+
+
+def statistics_from_files_processes(paths: list[Path], menu: dict[str, Dish], workers: int = 4) -> OrderStatistics:
+    """Read and aggregate the files with ProcessPoolExecutor: every process works with its own files."""
+    with ProcessPoolExecutor(max_workers=workers) as executor:
+        parts = list(executor.map(file_statistics, paths, [menu] * len(paths)))
+    return merge_statistics(parts, menu)
 
 
 # --- Race condition and Lock ------------------------------------------------------------------
