@@ -231,3 +231,13 @@ def test_optimization_demo(monkeypatch: pytest.MonkeyPatch, capsys: pytest.Captu
     assert output.count("результат збігається: так") == 6
     assert "дані збігаються: так" in output
     assert "з Lock: 4000" in output
+
+
+def test_profiling_report(capsys: pytest.CaptureFixture[str]) -> None:
+    from restaurant_orders.profiling import run_profile
+
+    run_profile(2_000)
+    output = capsys.readouterr().out
+    assert "Історія: 2000 замовлень" in output
+    assert "cProfile ДО оптимізації: statistics_python" in output and "order_totals_python" in output
+    assert "cProfile ПІСЛЯ оптимізації: statistics_numpy" in output
