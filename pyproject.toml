@@ -68,4 +68,4 @@ python_version = "3.11"
 strict = true
 warn_unused_ignores = true
 warn_return_any = true
-files = ["src"]
+files = ["src", "benchmarks"]
