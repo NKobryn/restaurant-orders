@@ -15,14 +15,31 @@ PROJECT = Path(__file__).resolve().parents[2]
 
 
 def test_console_interactive_menu(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
-    answers = iter([
-        "1",
-        "2", "abc", "201",
-        "2", "201",
-        "3", "201", "Суп", "Перші страви", "-5", "80",
-        "3", "999", "Сік", "Напої", "50",
-        "4", "5", "9", "0",
-    ])
+    answers = iter(
+        [
+            "1",
+            "2",
+            "abc",
+            "201",
+            "2",
+            "201",
+            "3",
+            "201",
+            "Суп",
+            "Перші страви",
+            "-5",
+            "80",
+            "3",
+            "999",
+            "Сік",
+            "Напої",
+            "50",
+            "4",
+            "5",
+            "9",
+            "0",
+        ]
+    )
     monkeypatch.setattr("builtins.input", lambda prompt="": next(answers))
     monkeypatch.setattr(sys, "argv", ["console", "--interactive"])
     console.main()

@@ -101,8 +101,9 @@ def test_side_effect_function_decides_per_call(service: RestaurantService, gatew
     assert gateway.pay.call_args_list == [call(1, Money(95.0)), call(2, Money(560.0))]
 
 
-def test_repository_mock_interactions(menu: Menu, gateway: Mock, notifier: Mock,
-                                      order_factory: Callable[..., Order]) -> None:
+def test_repository_mock_interactions(
+    menu: Menu, gateway: Mock, notifier: Mock, order_factory: Callable[..., Order]
+) -> None:
     repository = Mock(spec=Repository)
     order = order_factory(order_id=7)
     repository.get.return_value = order

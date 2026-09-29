@@ -95,11 +95,14 @@ async def root() -> dict[str, str]:
 
 # --- dishes and categories ---
 
+
 @app.get("/categories", tags=["dishes"])
 async def list_categories(session: SessionDep) -> list[CategoryResponse]:
     """All categories with the number of dishes."""
-    return [CategoryResponse(id=category.id, name=category.name, dishes_count=count)
-            for category, count in CategoryRepository(session).list_with_counts()]
+    return [
+        CategoryResponse(id=category.id, name=category.name, dishes_count=count)
+        for category, count in CategoryRepository(session).list_with_counts()
+    ]
 
 
 @app.get("/dishes", tags=["dishes"])
@@ -160,6 +163,7 @@ async def delete_dish(dish_id: int, session: SessionDep) -> None:
 
 # --- orders ---
 
+
 @app.get("/orders", tags=["orders"])
 async def list_orders(
     session: SessionDep,
@@ -168,8 +172,10 @@ async def list_orders(
 ) -> list[OrderResponse]:
     """History of orders (oldest first), page by page."""
     service = OrderService(session)
-    return [OrderResponse.from_model(order, service.most_expensive_item(order.id))
-            for order in OrderRepository(session).history(limit=limit, offset=offset)]
+    return [
+        OrderResponse.from_model(order, service.most_expensive_item(order.id))
+        for order in OrderRepository(session).history(limit=limit, offset=offset)
+    ]
 
 
 @app.post("/orders", status_code=status.HTTP_201_CREATED, tags=["orders"])
@@ -187,8 +193,10 @@ async def order_statistics(session: SessionDep) -> OrderStatisticsResponse:
     return OrderStatisticsResponse(
         orders_count=OrderRepository(session).count(),
         average_order_value=service.average_order_value(),
-        categories=[CategoryStatisticsResponse(category=row.category, portions=row.portions, revenue=row.revenue)
-                    for row in service.category_statistics()],
+        categories=[
+            CategoryStatisticsResponse(category=row.category, portions=row.portions, revenue=row.revenue)
+            for row in service.category_statistics()
+        ],
     )
 
 
@@ -218,5 +226,6 @@ async def delete_order_item(order_id: int, item_id: int, session: SessionDep) ->
 async def get_order_total(order_id: int, session: SessionDep) -> OrderTotalResponse:
     """Total of an order computed by SQL SUM."""
     order = get_order_or_404(session, order_id)
-    return OrderTotalResponse(order_id=order_id, items_count=len(order.items),
-                              total=OrderService(session).order_total(order_id))
+    return OrderTotalResponse(
+        order_id=order_id, items_count=len(order.items), total=OrderService(session).order_total(order_id)
+    )

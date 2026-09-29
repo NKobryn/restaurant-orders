@@ -44,14 +44,18 @@ def print_orders(orders: list[OrderSummary]) -> None:
     """Print order summaries as a table."""
     for order in orders:
         best = order.most_expensive
-        print(f"№{order.order_id}: позицій {order.items_count}, сума {order.total:8.2f} грн, "
-              f"найдорожча — {best.dish} ({best.price:.2f} грн)")
+        print(
+            f"№{order.order_id}: позицій {order.items_count}, сума {order.total:8.2f} грн, "
+            f"найдорожча — {best.dish} ({best.price:.2f} грн)"
+        )
 
 
 def print_statistics(statistics: OrdersStatistics) -> None:
     """Print totals of a stream of orders."""
-    print(f"Замовлень: {statistics.orders_count}, виручка: {statistics.revenue:.2f} грн, "
-          f"середній чек: {statistics.average_check:.2f} грн")
+    print(
+        f"Замовлень: {statistics.orders_count}, виручка: {statistics.revenue:.2f} грн, "
+        f"середній чек: {statistics.average_check:.2f} грн"
+    )
     best = statistics.most_expensive
     if best is not None:
         print(f"Найдорожча позиція: {best.dish}, {best.price:.2f} грн (замовлення №{best.order_id})")

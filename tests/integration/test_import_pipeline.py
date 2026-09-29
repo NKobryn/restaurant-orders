@@ -30,8 +30,14 @@ def test_tolerant_import_writes_json_errors_and_summary(import_files: Callable[.
     errors = (tmp_path / "invalid.csv").read_text(encoding="utf-8").splitlines()
     assert [line.split(",")[:2] for line in errors[1:]] == [["5", "order_id"], ["6", "quantity"]]
     summary = json.loads((tmp_path / "summary.json").read_text(encoding="utf-8"))
-    assert summary == {"mode": "tolerant", "input": str(tmp_path / "orders.csv"), "total": 5, "valid": 3,
-                       "invalid": 2, "exported": 3}
+    assert summary == {
+        "mode": "tolerant",
+        "input": str(tmp_path / "orders.csv"),
+        "total": 5,
+        "valid": 3,
+        "invalid": 2,
+        "exported": 3,
+    }
 
 
 def test_configuration_categories_change_the_result(import_files: Callable[..., Path], tmp_path: Path) -> None:

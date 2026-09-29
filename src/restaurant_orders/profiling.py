@@ -24,7 +24,19 @@ from restaurant_orders.analytics import (
     to_arrays,
 )
 
-RESULT_FIELDS = ["experiment", "dataset", "method", "workers", "run1", "run2", "run3", "run4", "run5", "mean", "speedup"]
+RESULT_FIELDS = [
+    "experiment",
+    "dataset",
+    "method",
+    "workers",
+    "run1",
+    "run2",
+    "run3",
+    "run4",
+    "run5",
+    "mean",
+    "speedup",
+]
 
 
 @dataclass(slots=True)
@@ -61,7 +73,9 @@ def calculate_speedup(baseline: float, optimized: float) -> float:
     return baseline / optimized
 
 
-def result_row(experiment: str, dataset: int | str, measurement: Measurement, workers: int | str, baseline: float) -> dict[str, Any]:
+def result_row(
+    experiment: str, dataset: int | str, measurement: Measurement, workers: int | str, baseline: float
+) -> dict[str, Any]:
     """Build one row of the results table."""
     row: dict[str, Any] = {"experiment": experiment, "dataset": dataset, "method": measurement.name, "workers": workers}
     for number, elapsed in enumerate(measurement.times, start=1):

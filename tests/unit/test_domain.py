@@ -22,11 +22,13 @@ from restaurant_orders.domain.value_objects import Money
 
 def make_menu() -> Menu:
     """Create a small menu for tests."""
-    return Menu([
-        Dish(1, "Борщ", "Перші страви", Money(95.0)),
-        Dish(5, "Стейк", "Основні страви", Money(280.0)),
-        Dish(8, "Узвар", "Напої", Money(45.0)),
-    ])
+    return Menu(
+        [
+            Dish(1, "Борщ", "Перші страви", Money(95.0)),
+            Dish(5, "Стейк", "Основні страви", Money(280.0)),
+            Dish(8, "Узвар", "Напої", Money(45.0)),
+        ]
+    )
 
 
 class FakeGateway:
@@ -154,8 +156,13 @@ class RepositoryPricingDtoTest(unittest.TestCase):
             CategoryDiscount("Напої", 0)
 
     def test_payload_becomes_dish(self) -> None:
-        payload: DishPayload = {"id": 2, "name": "Бульйон", "category": "Перші страви",
-                                "price": 70.0, "currency": "UAH"}
+        payload: DishPayload = {
+            "id": 2,
+            "name": "Бульйон",
+            "category": "Перші страви",
+            "price": 70.0,
+            "currency": "UAH",
+        }
         self.assertEqual(dish_from_payload(payload).price, Money(70.0))
 
 
@@ -165,8 +172,9 @@ class RestaurantServiceTest(unittest.TestCase):
     def setUp(self) -> None:
         self.gateway = FakeGateway()
         self.notifier = FakeNotifier()
-        self.service = RestaurantService(make_menu(), InMemoryRepository[Order](), self.gateway,
-                                         self.notifier, NoDiscount())
+        self.service = RestaurantService(
+            make_menu(), InMemoryRepository[Order](), self.gateway, self.notifier, NoDiscount()
+        )
 
     def test_create_order_add_dishes_and_totals(self) -> None:
         first = self.service.create_order()
@@ -195,8 +203,9 @@ class RestaurantServiceTest(unittest.TestCase):
         self.assertEqual(len(self.gateway.payments), 1)
 
     def test_refused_payment_keeps_order_new(self) -> None:
-        service = RestaurantService(make_menu(), InMemoryRepository[Order](), FakeGateway(refuse=True),
-                                    self.notifier, NoDiscount())
+        service = RestaurantService(
+            make_menu(), InMemoryRepository[Order](), FakeGateway(refuse=True), self.notifier, NoDiscount()
+        )
         order = service.create_order()
         service.add_dish(order.id, 5)
         with self.assertRaises(PaymentError):
@@ -206,8 +215,11 @@ class RestaurantServiceTest(unittest.TestCase):
 
     def test_errors_share_one_base_class(self) -> None:
         empty = self.service.create_order()
-        for action in (lambda: self.service.checkout(empty.id), lambda: self.service.order_total(99),
-                       lambda: self.service.add_dish(empty.id, 42)):
+        for action in (
+            lambda: self.service.checkout(empty.id),
+            lambda: self.service.order_total(99),
+            lambda: self.service.add_dish(empty.id, 42),
+        ):
             with self.assertRaises(RestaurantError):
                 action()
         self.assertTrue(issubclass(OrderNotFoundError, RestaurantError))

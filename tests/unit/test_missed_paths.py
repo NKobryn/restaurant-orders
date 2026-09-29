@@ -7,7 +7,12 @@ import pytest
 
 from restaurant_orders.console import print_order, read_positive_int
 from restaurant_orders.data_io.config import load_config
-from restaurant_orders.data_io.exceptions import ConfigurationError, DataExportError, DataImportError, RecordValidationError
+from restaurant_orders.data_io.exceptions import (
+    ConfigurationError,
+    DataExportError,
+    DataImportError,
+    RecordValidationError,
+)
 from restaurant_orders.data_io.exporters import errors_csv, export_json, export_summary
 from restaurant_orders.data_io.readers import CsvImporter, JsonLinesImporter
 from restaurant_orders.data_io.validators import validate_row
@@ -108,8 +113,9 @@ def test_small_helpers_on_empty_or_missing_data() -> None:
     repository = InMemoryRepository[Order]()
     repository.add(Order(1))
     assert len(repository) == 1
-    menu = menu_from_payloads([{"id": 2, "name": "Бульйон", "category": "Перші страви", "price": 70.0,
-                                "currency": "UAH"}])
+    menu = menu_from_payloads(
+        [{"id": 2, "name": "Бульйон", "category": "Перші страви", "price": 70.0, "currency": "UAH"}]
+    )
     assert [dish.name for dish in menu] == ["Бульйон"]
 
 

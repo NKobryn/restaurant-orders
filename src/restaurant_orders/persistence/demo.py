@@ -66,7 +66,9 @@ def demo_menu_crud(session: Session) -> None:
     lemonade = dishes.add("Лимонад", categories.get_or_create("Напої"), 60.0)
     session.commit()
     print(f"\nUpdate: Капучино 75.00 → {cappuccino.price:.2f} грн; Create: Лимонад #{lemonade.id}")
-    print(f"Delete: Лимонад #{lemonade.id} видалено: {dishes.delete(lemonade.id)}; повторно: {dishes.delete(lemonade.id)}")
+    print(
+        f"Delete: Лимонад #{lemonade.id} видалено: {dishes.delete(lemonade.id)}; повторно: {dishes.delete(lemonade.id)}"
+    )
     session.commit()
     print(f"Сторінка 2 меню (limit=3, offset=3): {[dish.name for dish in dishes.list(limit=3, offset=3)]}")
 
@@ -97,8 +99,10 @@ def print_history(service: OrderService, orders: list[Order]) -> None:
         dishes = ", ".join(f"{item.dish.name} × {item.quantity}" for item in order.items)
         best = service.most_expensive_item(order.id)
         best_text = f"{best.dish.name} ({best.unit_price:.2f} грн)" if best else "—"
-        print(f"№{order.id} [{order.created_at:%Y-%m-%d %H:%M:%S}] {dishes}; сума {service.order_total(order.id):.2f} грн; "
-              f"найдорожча: {best_text}")
+        print(
+            f"№{order.id} [{order.created_at:%Y-%m-%d %H:%M:%S}] {dishes}; сума {service.order_total(order.id):.2f} грн; "
+            f"найдорожча: {best_text}"
+        )
     print(f"Середня вартість замовлення (AVG): {service.average_order_value():.2f} грн")
 
 

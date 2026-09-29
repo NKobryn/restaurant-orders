@@ -25,9 +25,7 @@ class DemoDeliveryService:
         return f"DLV-{order_id}"
 
 
-async def dispatch_paid_order(
-    order: Order, address: str, delivery: DeliveryService, notifier: KitchenNotifier
-) -> str:
+async def dispatch_paid_order(order: Order, address: str, delivery: DeliveryService, notifier: KitchenNotifier) -> str:
     """Pass a paid order to delivery and tell the kitchen the tracking number."""
     if order.status is not OrderStatus.PAID:
         raise OrderStateError(f"Замовлення №{order.id} ще не оплачено.")

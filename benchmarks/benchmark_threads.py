@@ -77,7 +77,11 @@ def main() -> None:
         value = count_in_threads(ProcessedCounter(use_lock), threads=4, increments=1_000)
         print(f"  {'з Lock   ' if use_lock else 'без Lock '}: {value}")
 
-    for experiment, rows in (("threads_cpu", cpu_rows), ("threads_files_local", local_rows), ("threads_files_slow", slow_rows)):
+    for experiment, rows in (
+        ("threads_cpu", cpu_rows),
+        ("threads_files_local", local_rows),
+        ("threads_files_slow", slow_rows),
+    ):
         update_results_csv(RESULTS, experiment, rows)
     print("Результати збережено: benchmarks/results/benchmark_results.csv")
 

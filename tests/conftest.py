@@ -56,8 +56,7 @@ def quiet_logging() -> Iterator[None]:
 def dish_factory() -> Callable[..., Dish]:
     """Fixture factory: create dishes with only the fields a test cares about."""
 
-    def create_dish(dish_id: int = 1, name: str = "Борщ", category: str = "Перші страви",
-                    price: float = 95.0) -> Dish:
+    def create_dish(dish_id: int = 1, name: str = "Борщ", category: str = "Перші страви", price: float = 95.0) -> Dish:
         return Dish(dish_id, name, category, Money(price))
 
     return create_dish
@@ -66,12 +65,14 @@ def dish_factory() -> Callable[..., Dish]:
 @pytest.fixture
 def menu(dish_factory: Callable[..., Dish]) -> Menu:
     """Menu of four dishes of different categories."""
-    return Menu([
-        dish_factory(1, "Борщ", "Перші страви", 95.0),
-        dish_factory(3, "Вареники", "Основні страви", 120.0),
-        dish_factory(5, "Стейк", "Основні страви", 280.0),
-        dish_factory(8, "Узвар", "Напої", 45.0),
-    ])
+    return Menu(
+        [
+            dish_factory(1, "Борщ", "Перші страви", 95.0),
+            dish_factory(3, "Вареники", "Основні страви", 120.0),
+            dish_factory(5, "Стейк", "Основні страви", 280.0),
+            dish_factory(8, "Узвар", "Напої", 45.0),
+        ]
+    )
 
 
 @pytest.fixture
@@ -122,8 +123,12 @@ def import_files(tmp_path: Path) -> Callable[..., Path]:
         input_path = tmp_path / "orders.csv"
         input_path.write_text(CSV_HEADER + rows, encoding="utf-8")
         config = tmp_path / "config.yaml"
-        config.write_text(CONFIG_TEMPLATE.format(input=input_path, folder=tmp_path, categories=categories,
-                                                 skip_invalid=str(skip_invalid).lower()), encoding="utf-8")
+        config.write_text(
+            CONFIG_TEMPLATE.format(
+                input=input_path, folder=tmp_path, categories=categories, skip_invalid=str(skip_invalid).lower()
+            ),
+            encoding="utf-8",
+        )
         return config
 
     return create
@@ -148,8 +153,12 @@ def menu_session(db_session: Session) -> Session:
     from restaurant_orders.persistence.repositories import CategoryRepository, DishRepository
 
     categories, dishes = CategoryRepository(db_session), DishRepository(db_session)
-    for name, category, price in (("Борщ", "Перші страви", 95.0), ("Стейк", "Основні страви", 280.0),
-                                  ("Деруни", "Основні страви", 110.0), ("Узвар", "Напої", 45.0)):
+    for name, category, price in (
+        ("Борщ", "Перші страви", 95.0),
+        ("Стейк", "Основні страви", 280.0),
+        ("Деруни", "Основні страви", 110.0),
+        ("Узвар", "Напої", 45.0),
+    ):
         dishes.add(name, categories.get_or_create(category), price)
     db_session.commit()
     return db_session
@@ -178,4 +187,3 @@ def api_session_factory() -> Iterator[Callable[[], Session]]:
     yield factory
     app.dependency_overrides.clear()
     engine.dispose()
-

@@ -149,8 +149,11 @@ def best_dish(dish_sales: dict[str, Sales], index: int) -> tuple[str, Any]:
 
 
 def build_statistics(
-    orders_count: int, turnover: float, best_order: tuple[int, float],
-    dish_sales: dict[str, Sales], menu: dict[str, Dish],
+    orders_count: int,
+    turnover: float,
+    best_order: tuple[int, float],
+    dish_sales: dict[str, Sales],
+    menu: dict[str, Dish],
 ) -> OrderStatistics:
     """Collect the final statistics from already aggregated values."""
     return OrderStatistics(

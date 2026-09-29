@@ -78,7 +78,9 @@ def benchmark_files(size: int, files: int) -> list[dict[str, Any]]:
 
 def speedup_chart(rows: list[dict[str, Any]], size: int, method: str) -> None:
     """Print the speedup of a method for every number of workers."""
-    baseline = next(float(row["mean"]) for row in rows if row["dataset"] == size and row["method"].startswith("Sequential"))
+    baseline = next(
+        float(row["mean"]) for row in rows if row["dataset"] == size and row["method"].startswith("Sequential")
+    )
     chart = {
         f"workers={row['workers']}": calculate_speedup(baseline, float(row["mean"]))
         for row in rows

@@ -55,5 +55,8 @@ def run_import(config: AppConfig, statistics: ImportStatistics) -> None:
         export_summary(summary, config.summary_path)
     logger.info(
         "Статистика: всього %d, коректних %d, некоректних %d, експортовано %d",
-        statistics.total, statistics.valid, statistics.invalid, statistics.exported,
+        statistics.total,
+        statistics.valid,
+        statistics.invalid,
+        statistics.exported,
     )

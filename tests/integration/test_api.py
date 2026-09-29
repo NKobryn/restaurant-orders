@@ -13,8 +13,12 @@ from restaurant_orders.api.app import app
 
 pytestmark = pytest.mark.integration
 
-MENU = [("Борщ", "Перші страви", 95.0), ("Стейк", "Основні страви", 280.0), ("Деруни", "Основні страви", 110.0),
-        ("Узвар", "Напої", 45.0)]
+MENU = [
+    ("Борщ", "Перші страви", 95.0),
+    ("Стейк", "Основні страви", 280.0),
+    ("Деруни", "Основні страви", 110.0),
+    ("Узвар", "Напої", 45.0),
+]
 
 
 @pytest.fixture
@@ -41,6 +45,7 @@ def create_order(client: TestClient, order_id: int, *items: tuple[str, int]) -> 
 
 
 # --- dishes and categories ---
+
 
 def test_root(client: TestClient) -> None:
     response = client.get("/")
@@ -81,7 +86,9 @@ def test_list_dishes_filter_sort_and_pages(menu_client: TestClient) -> None:
     names = lambda response: [dish["name"] for dish in response.json()]  # noqa: E731
     assert names(menu_client.get("/dishes")) == ["Стейк", "Деруни", "Борщ", "Узвар"]
     assert names(menu_client.get("/dishes", params={"category": "Основні страви", "sort": "price_asc"})) == [
-        "Деруни", "Стейк"]
+        "Деруни",
+        "Стейк",
+    ]
     assert names(menu_client.get("/dishes", params={"sort": "name", "limit": 2, "offset": 1})) == ["Деруни", "Стейк"]
     assert menu_client.get("/dishes", params={"sort": "random"}).status_code == 422
     assert menu_client.get("/dishes", params={"limit": 0}).status_code == 422
@@ -111,13 +118,16 @@ def test_categories_with_counts(menu_client: TestClient) -> None:
 
 # --- orders ---
 
+
 def test_create_and_get_order(menu_client: TestClient) -> None:
     data = create_order(menu_client, 101, ("Борщ", 2), ("Узвар", 2))
     assert data["total"] == 280.0
     assert data["most_expensive"]["dish"] == "Борщ"
     loaded = menu_client.get("/orders/101").json()
     assert [(item["dish"], item["quantity"], item["line_total"]) for item in loaded["items"]] == [
-        ("Борщ", 2, 190.0), ("Узвар", 2, 90.0)]
+        ("Борщ", 2, 190.0),
+        ("Узвар", 2, 90.0),
+    ]
 
 
 @pytest.mark.parametrize(

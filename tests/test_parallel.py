@@ -137,7 +137,9 @@ def test_split_keeps_orders_whole(parts: int, history: list[HistoryItem]) -> Non
 # --- Files and threads ---------------------------------------------------------------------
 
 
-def test_files_are_loaded_in_order_by_threads(tmp_path: Path, history: list[HistoryItem], menu: dict[str, Dish]) -> None:
+def test_files_are_loaded_in_order_by_threads(
+    tmp_path: Path, history: list[HistoryItem], menu: dict[str, Dish]
+) -> None:
     paths = write_order_files(history, tmp_path, 4)
     assert [path.name for path in paths] == ["orders_01.csv", "orders_02.csv", "orders_03.csv", "orders_04.csv"]
     progress = LoadProgress()

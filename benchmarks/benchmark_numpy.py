@@ -35,7 +35,9 @@ def benchmark_time() -> list[dict[str, Any]]:
         vectorized = benchmark_repeated("NumPy (arrays ready)", statistics_numpy, arrays, menu, repeats=REPEATS)
         assert converted.result == baseline.result and vectorized.result == baseline.result
         for measurement in (baseline, converted, vectorized):
-            rows.append(result_row("numpy", size, measurement, "–" if measurement is not baseline else 1, baseline.mean))
+            rows.append(
+                result_row("numpy", size, measurement, "–" if measurement is not baseline else 1, baseline.mean)
+            )
     return rows
 
 

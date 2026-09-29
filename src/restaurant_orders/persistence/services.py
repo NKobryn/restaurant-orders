@@ -127,5 +127,7 @@ class OrderService:
             .group_by(Category.name)
             .order_by(revenue.desc())
         )
-        return [CategoryStatistics(name, int(portions), round(float(total), 2))
-                for name, portions, total in self.session.execute(statement)]
+        return [
+            CategoryStatistics(name, int(portions), round(float(total), 2))
+            for name, portions, total in self.session.execute(statement)
+        ]

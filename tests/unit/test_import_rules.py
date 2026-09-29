@@ -38,8 +38,15 @@ def test_price_boundaries_are_accepted(price: str) -> None:
         ({"dish": ""}, "dish"),
         ({"category": "Суші"}, "category"),
     ],
-    ids=["price-below-min", "price-above-max", "zero-quantity", "text-quantity", "negative-id", "empty-dish",
-         "unknown-category"],
+    ids=[
+        "price-below-min",
+        "price-above-max",
+        "zero-quantity",
+        "text-quantity",
+        "negative-id",
+        "empty-dish",
+        "unknown-category",
+    ],
 )
 def test_invalid_record_names_field(changes: dict[str, str], field: str) -> None:
     with pytest.raises(RecordValidationError) as error_info:

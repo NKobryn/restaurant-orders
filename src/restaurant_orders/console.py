@@ -47,10 +47,7 @@ def print_statistics(orders: list[Order]) -> None:
     for order in orders:
         most_expensive = find_most_expensive_dish(order)
         if most_expensive is not None:
-            print(
-                f"Найдорожча позиція в №{order.number}: "
-                f"{most_expensive.name} ({most_expensive.price:.2f} грн)"
-            )
+            print(f"Найдорожча позиція в №{order.number}: {most_expensive.name} ({most_expensive.price:.2f} грн)")
 
 
 def read_positive_int(prompt: str) -> int:

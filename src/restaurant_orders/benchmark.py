@@ -66,12 +66,16 @@ def main() -> None:
     results = {size: benchmark_size(size, rng) for size in SIZES}
 
     print("\nЧас на 1000 пошуків, мс")
-    print(f"{'Записів':>8} | {'list пошук':>10} | {'dict get':>9} | {'list/dict':>9} | "
-          f"{'побудова dict':>13} | {'in list':>8} | {'in set':>7}")
+    print(
+        f"{'Записів':>8} | {'list пошук':>10} | {'dict get':>9} | {'list/dict':>9} | "
+        f"{'побудова dict':>13} | {'in list':>8} | {'in set':>7}"
+    )
     print("-" * 84)
     for size, (list_ms, dict_ms, index_ms, in_list_ms, in_set_ms) in results.items():
-        print(f"{size:>8} | {list_ms:>10.3f} | {dict_ms:>9.3f} | {list_ms / dict_ms:>8.0f}x | "
-              f"{index_ms:>13.3f} | {in_list_ms:>8.3f} | {in_set_ms:>7.3f}")
+        print(
+            f"{size:>8} | {list_ms:>10.3f} | {dict_ms:>9.3f} | {list_ms / dict_ms:>8.0f}x | "
+            f"{index_ms:>13.3f} | {in_list_ms:>8.3f} | {in_set_ms:>7.3f}"
+        )
 
 
 if __name__ == "__main__":

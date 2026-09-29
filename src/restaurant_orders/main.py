@@ -57,8 +57,10 @@ def show_basic_features() -> None:
     statistics = orders.statistics()
     totals = order_totals_python(orders.items, orders.menu)
     print("1. БАЗОВІ МОЖЛИВОСТІ: замовлення №1 (Борщ×2, Узвар), №2 (Стейк, Капучино×2)")
-    print(f"  суми: {', '.join(f'№{number} — {total:.2f} грн' for number, total in totals.items())}; "
-          f"середня вартість: {statistics.average_check:.2f} грн; найдорожче — №{statistics.most_expensive_order[0]}")
+    print(
+        f"  суми: {', '.join(f'№{number} — {total:.2f} грн' for number, total in totals.items())}; "
+        f"середня вартість: {statistics.average_check:.2f} грн; найдорожче — №{statistics.most_expensive_order[0]}"
+    )
 
 
 def compare_implementations(history_size: int) -> None:
@@ -71,10 +73,15 @@ def compare_implementations(history_size: int) -> None:
     print_statistics(baseline.result)
     measurements = [
         baseline,
-        benchmark_repeated(f"ThreadPoolExecutor({WORKERS})", statistics_threads, history, menu, WORKERS, repeats=REPEATS),
-        benchmark_repeated(f"ProcessPoolExecutor({WORKERS})", statistics_processes, history, menu, WORKERS, repeats=REPEATS),
-        benchmark_repeated(f"multiprocessing.Process({WORKERS})", statistics_multiprocessing, history, menu, WORKERS,
-                           repeats=REPEATS),
+        benchmark_repeated(
+            f"ThreadPoolExecutor({WORKERS})", statistics_threads, history, menu, WORKERS, repeats=REPEATS
+        ),
+        benchmark_repeated(
+            f"ProcessPoolExecutor({WORKERS})", statistics_processes, history, menu, WORKERS, repeats=REPEATS
+        ),
+        benchmark_repeated(
+            f"multiprocessing.Process({WORKERS})", statistics_multiprocessing, history, menu, WORKERS, repeats=REPEATS
+        ),
         benchmark_repeated("NumPy + to_arrays", statistics_numpy_from_history, history, menu, repeats=REPEATS),
         benchmark_repeated("NumPy (arrays ready)", statistics_numpy, arrays, menu, repeats=REPEATS),
     ]
@@ -82,7 +89,9 @@ def compare_implementations(history_size: int) -> None:
     for measurement in measurements:
         same = "так" if measurement.result == baseline.result else "НІ"
         speedup = calculate_speedup(baseline.mean, measurement.mean)
-        print(f"  {measurement.name:<30} {measurement.mean:8.4f} s  speedup {speedup:6.2f}×  результат збігається: {same}")
+        print(
+            f"  {measurement.name:<30} {measurement.mean:8.4f} s  speedup {speedup:6.2f}×  результат збігається: {same}"
+        )
     print("\n".join("  " + line for line in bar_chart({m.name: m.mean for m in measurements}, "s", width=30)))
 
 
@@ -95,8 +104,10 @@ def show_threads_for_files() -> None:
         threads = benchmark_repeated("ThreadPoolExecutor(8)", load_files_threads, paths, 8, None, 0.05, repeats=1)
     same = "так" if sequential.result == threads.result == history else "НІ"
     print("\n4. ФАЙЛИ ЗАМОВЛЕНЬ: 16 CSV-файлів, повільне сховище (очікування 0.05 с на файл)")
-    print(f"  послідовно {sequential.mean:.3f} s, ThreadPoolExecutor(8) {threads.mean:.3f} s, "
-          f"speedup {calculate_speedup(sequential.mean, threads.mean):.2f}×, дані збігаються: {same}")
+    print(
+        f"  послідовно {sequential.mean:.3f} s, ThreadPoolExecutor(8) {threads.mean:.3f} s, "
+        f"speedup {calculate_speedup(sequential.mean, threads.mean):.2f}×, дані збігаються: {same}"
+    )
 
 
 def show_caching(history_size: int) -> None:
@@ -113,8 +124,10 @@ def show_caching(history_size: int) -> None:
     print(f"  ціна Борщу 95 → 100 грн (версія {orders.version}): оборот {before:.2f} → {changed.turnover:.2f} грн")
     orders.add_item(1, "Стейк", 1)
     added = orders.statistics()
-    print(f"  +Стейк у замовлення №1 (версія {orders.version}): оборот {added.turnover:.2f} грн; "
-          f"{cached_statistics.cache_info()}")
+    print(
+        f"  +Стейк у замовлення №1 (версія {orders.version}): оборот {added.turnover:.2f} грн; "
+        f"{cached_statistics.cache_info()}"
+    )
 
 
 def show_race_condition() -> None:

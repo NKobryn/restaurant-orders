@@ -51,8 +51,10 @@ async def demo_rest(client: httpx.AsyncClient) -> None:
     """CRUD of dishes, orders with items, totals, statistics and error answers."""
     show(await client.get("/"))
     print("\nМЕНЮ")
-    statuses = [(await client.post("/dishes", json={"name": d.name, "category": d.category, "price": d.price}))
-                .status_code for d in MENU]
+    statuses = [
+        (await client.post("/dishes", json={"name": d.name, "category": d.category, "price": d.price})).status_code
+        for d in MENU
+    ]
     print(f"POST /dishes × {len(statuses)} → {sorted(set(statuses))}")
     show(await client.get("/dishes", params={"category": "Напої", "sort": "price_asc"}))
     show(await client.patch("/dishes/9", json={"price": 80.0}))
@@ -92,8 +94,10 @@ async def demo_async(asgi: httpx.ASGITransport) -> None:
         start = time.perf_counter()
         results = await fetch_order_totals(client, order_ids, max_concurrency=2)
         print_totals(f"{len(order_ids)} запитів по 0.2 с, max_concurrency=2", results, time.perf_counter() - start)
-    print(f"  одночасно виконувалось не більше {delayed.max_active} запитів (послідовно було б ≈ "
-          f"{0.2 * len(order_ids):.1f} с)")
+    print(
+        f"  одночасно виконувалось не більше {delayed.max_active} запитів (послідовно було б ≈ "
+        f"{0.2 * len(order_ids):.1f} с)"
+    )
 
     print("\nRETRY (перші 2 з'єднання падають, експоненційна затримка 0.1 → 0.2 с)")
     for attempts in (3, 2):

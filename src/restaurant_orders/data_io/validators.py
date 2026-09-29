@@ -11,7 +11,9 @@ def to_int(row: Row, field: str, line_number: int) -> int:
     try:
         return int(str(row[field]))
     except ValueError as error:
-        raise RecordValidationError(f"{row[field]!r} не є цілим числом.", line_number=line_number, field=field) from error
+        raise RecordValidationError(
+            f"{row[field]!r} не є цілим числом.", line_number=line_number, field=field
+        ) from error
 
 
 def to_float(row: Row, field: str, line_number: int) -> float:

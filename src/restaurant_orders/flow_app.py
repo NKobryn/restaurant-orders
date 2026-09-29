@@ -38,8 +38,9 @@ def main(argv: list[str] | None = None) -> int:
     logging.basicConfig(level=logging.WARNING, format="%(levelname)s | %(message)s", stream=sys.stdout, force=True)
     try:
         config = load_config(config_path)
-        result = run_order_flow(config, LimitedPaymentGateway(CARD_LIMIT), ConsoleKitchenNotifier(),
-                                DemoDeliveryService(), ADDRESS)
+        result = run_order_flow(
+            config, LimitedPaymentGateway(CARD_LIMIT), ConsoleKitchenNotifier(), DemoDeliveryService(), ADDRESS
+        )
     except ApplicationError as error:
         print(f"CRITICAL | {error} (причина: {error.__cause__!r})")
         return 1

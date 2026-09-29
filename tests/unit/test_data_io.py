@@ -35,8 +35,9 @@ logging: {level: INFO, path: DIR/logs/import.log}
 """
 
 
-def row(order_id: str = "1", dish: str = "Борщ", category: str = "Перші страви",
-        price: str = "95", quantity: str = "1") -> dict[str, str]:
+def row(
+    order_id: str = "1", dish: str = "Борщ", category: str = "Перші страви", price: str = "95", quantity: str = "1"
+) -> dict[str, str]:
     """Create a raw record for validation tests."""
     return {"order_id": order_id, "dish": dish, "category": category, "price": price, "quantity": quantity}
 
@@ -170,7 +171,9 @@ class ImportTest(FolderTestCase):
         self.assertEqual((self.folder / "orders.json").read_text(encoding="utf-8"), "[]\n")
 
     def test_json_lines_input_is_chosen_by_extension(self) -> None:
-        self.write("orders.jsonl", '{"order_id": 7, "dish": "Узвар", "category": "Напої", "price": 45, "quantity": 2}\n')
+        self.write(
+            "orders.jsonl", '{"order_id": 7, "dish": "Узвар", "category": "Напої", "price": 45, "quantity": 2}\n'
+        )
         statistics = ImportStatistics()
         run_import(load_config(self.config_file(input_name="orders.jsonl")), statistics)
         self.assertEqual(statistics.exported, 1)

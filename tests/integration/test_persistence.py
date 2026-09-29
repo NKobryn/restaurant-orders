@@ -32,6 +32,7 @@ def count(session: Session, model: type[Order] | type[OrderItem]) -> int:
 
 # --- CRUD of dishes ---
 
+
 def test_create_and_read_dish(db_session: Session) -> None:
     category = CategoryRepository(db_session).get_or_create("Напої")
     dish = DishRepository(db_session).add("Узвар", category, 45)
@@ -75,6 +76,7 @@ def test_category_is_created_once(db_session: Session) -> None:
 
 
 # --- orders, totals and aggregates ---
+
 
 def test_place_order_saves_all_items(menu_session: Session) -> None:
     service = OrderService(menu_session)
@@ -138,6 +140,7 @@ def test_history_and_category_statistics(menu_session: Session) -> None:
 
 # --- transactions, rollback and constraints ---
 
+
 @pytest.mark.parametrize(
     ("items", "message"),
     [
@@ -200,6 +203,7 @@ def test_deleting_order_cascades_to_items(menu_session: Session) -> None:
 
 
 # --- DB-API, migrations, configuration, application ---
+
 
 def test_dbapi_parameterized_search(tmp_path: Path) -> None:
     url = f"sqlite:///{tmp_path / 'menu.db'}"

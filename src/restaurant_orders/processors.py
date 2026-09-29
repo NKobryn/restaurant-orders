@@ -12,11 +12,7 @@ OrderLine = tuple[int, str, str, float]
 
 def to_order_lines(orders: list[Order]) -> list[OrderLine]:
     """Turn orders into a flat list of order positions."""
-    return [
-        (order.number, dish.name, dish.category, dish.price)
-        for order in orders
-        for dish in order.dishes
-    ]
+    return [(order.number, dish.name, dish.category, dish.price) for order in orders for dish in order.dishes]
 
 
 def get_unique_dishes(lines: list[OrderLine]) -> set[str]:

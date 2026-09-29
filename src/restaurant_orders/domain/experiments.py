@@ -15,6 +15,7 @@ MENU_LINES = ["1,Борщ,Перші страви,95", "5;Стейк;Основ�
 
 # --- Experiment 1: the service creates its dependency (A) or receives it (B) ---
 
+
 class HardwiredCheckout:
     """Variant A: the service creates a concrete payment gateway itself."""
 
@@ -47,6 +48,7 @@ class RecordingGateway:
 
 
 # --- Experiment 2: the same behaviour through inheritance and composition ---
+
 
 def to_dish(fields: list[str]) -> Dish:
     """Create a dish from four text fields: id, name, category, price."""
@@ -154,8 +156,10 @@ def main() -> None:
     HardwiredCheckout().pay(order)
     print("B. InjectedCheckout з трьома різними gateway без зміни коду сервісу:")
     recorder = RecordingGateway()
-    print(f"  RecordingGateway (fake для тесту) -> {InjectedCheckout(recorder).pay(order)}, "
-          f"записано: {[(number, str(amount)) for number, amount in recorder.payments]}")
+    print(
+        f"  RecordingGateway (fake для тесту) -> {InjectedCheckout(recorder).pay(order)}, "
+        f"записано: {[(number, str(amount)) for number, amount in recorder.payments]}"
+    )
     print(f"  DemoPaymentGateway -> {InjectedCheckout(DemoPaymentGateway()).pay(order)}")
     try:
         InjectedCheckout(LimitedPaymentGateway(Money(500.0))).pay(order)

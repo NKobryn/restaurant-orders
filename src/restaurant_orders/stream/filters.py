@@ -6,9 +6,7 @@ from itertools import islice
 from restaurant_orders.models import OrderItemRecord, OrderSummary
 
 
-def filter_by_category(
-    records: Iterable[OrderItemRecord], categories: set[str]
-) -> Iterator[OrderItemRecord]:
+def filter_by_category(records: Iterable[OrderItemRecord], categories: set[str]) -> Iterator[OrderItemRecord]:
     """Yield only positions whose category is in categories."""
     for record in records:
         if record.category in categories:
@@ -23,9 +21,7 @@ def first_orders(
     return list(islice(matching, amount))
 
 
-def find_first(
-    orders: Iterable[OrderSummary], condition: Callable[[OrderSummary], bool]
-) -> OrderSummary | None:
+def find_first(orders: Iterable[OrderSummary], condition: Callable[[OrderSummary], bool]) -> OrderSummary | None:
     """Return the first order that satisfies the condition and stop reading."""
     for order in orders:
         if condition(order):

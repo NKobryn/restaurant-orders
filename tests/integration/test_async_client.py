@@ -92,8 +92,9 @@ async def test_client_against_the_real_application(
         await client.post("/orders", json={"id": 1, "items": [{"dish": "Борщ", "quantity": 2}]})
 
     original = httpx.AsyncClient
-    monkeypatch.setattr(client_module.httpx, "AsyncClient",
-                        lambda base_url: original(transport=transport, base_url=base_url))
+    monkeypatch.setattr(
+        client_module.httpx, "AsyncClient", lambda base_url: original(transport=transport, base_url=base_url)
+    )
     [result] = await fetch_order_totals_from("http://test", [1])
     assert result.total == 190.0
 

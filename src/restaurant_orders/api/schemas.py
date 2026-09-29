@@ -82,8 +82,13 @@ class OrderItemResponse(ApiModel):
 
     @classmethod
     def from_model(cls, item: OrderItem) -> "OrderItemResponse":
-        return cls(id=item.id, dish=item.dish.name, quantity=item.quantity, unit_price=item.unit_price,
-                   line_total=item.line_total)
+        return cls(
+            id=item.id,
+            dish=item.dish.name,
+            quantity=item.quantity,
+            unit_price=item.unit_price,
+            line_total=item.line_total,
+        )
 
 
 class OrderResponse(ApiModel):

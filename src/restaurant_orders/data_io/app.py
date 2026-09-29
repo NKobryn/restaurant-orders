@@ -31,8 +31,10 @@ def main(argv: list[str] | None = None) -> int:
         run_import(config, statistics)
     except ApplicationError as error:
         logger.critical("Імпорт зупинено: %s (причина: %r)", error, error.__cause__)
-        print(f"Оброблено {statistics.total}, коректних {statistics.valid}, некоректних {statistics.invalid}; "
-              f"{config.output_path} не змінено.")
+        print(
+            f"Оброблено {statistics.total}, коректних {statistics.valid}, некоректних {statistics.invalid}; "
+            f"{config.output_path} не змінено."
+        )
         return 1
     print(f"Результат: {config.output_path}, помилки: {config.errors_path}, підсумок: {config.summary_path}")
     return 0

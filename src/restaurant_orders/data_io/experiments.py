@@ -66,8 +66,12 @@ def policies_experiment(folder: Path) -> None:
         results[mode] = (statistics, finish)
     print(f"{'Параметр':<18} | {'strict':>8} | {'tolerant':>8}")
     print("-" * 40)
-    for title, name in (("Оброблено записів", "total"), ("Valid", "valid"), ("Invalid", "invalid"),
-                        ("Exported", "exported")):
+    for title, name in (
+        ("Оброблено записів", "total"),
+        ("Valid", "valid"),
+        ("Invalid", "invalid"),
+        ("Exported", "exported"),
+    ):
         print(f"{title:<18} | {getattr(results['strict'][0], name):>8} | {getattr(results['tolerant'][0], name):>8}")
     for mode in ("strict", "tolerant"):
         print(f"Завершення {mode}: {results[mode][1]}")
@@ -114,16 +118,20 @@ def streaming_experiment(datasets: dict[int, Path]) -> None:
     """Experiment 2: eager and streaming import of large files."""
     print("\nЕКСПЕРИМЕНТ 2. STREAMING ПРОТИ EAGER (import + validation, ~1 % некоректних рядків)")
     print(f"Час: найкращий із {REPEATS}; пам'ять: пік tracemalloc")
-    print(f"{'Записів':>8} | {'валідних':>8} | {'eager, с':>8} | {'stream, с':>9} | {'eager, МБ':>9} | {'stream, МБ':>10}")
+    print(
+        f"{'Записів':>8} | {'валідних':>8} | {'eager, с':>8} | {'stream, с':>9} | {'eager, МБ':>9} | {'stream, МБ':>10}"
+    )
     print("-" * 70)
     logging.disable(logging.WARNING)
     for size, path in datasets.items():
         valid = streaming_import(path)
         if len(eager_import(path)) != valid:
             raise RuntimeError("eager і streaming дали різну кількість записів")
-        print(f"{size:>8} | {valid:>8} | {best_time(lambda: eager_import(path)):>8.3f} | "
-              f"{best_time(lambda: streaming_import(path)):>9.3f} | {peak_mb(lambda: eager_import(path)):>9.2f} | "
-              f"{peak_mb(lambda: streaming_import(path)):>10.2f}")
+        print(
+            f"{size:>8} | {valid:>8} | {best_time(lambda: eager_import(path)):>8.3f} | "
+            f"{best_time(lambda: streaming_import(path)):>9.3f} | {peak_mb(lambda: eager_import(path)):>9.2f} | "
+            f"{peak_mb(lambda: streaming_import(path)):>10.2f}"
+        )
     logging.disable(logging.NOTSET)
 
 

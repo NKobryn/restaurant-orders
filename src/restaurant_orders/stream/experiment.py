@@ -103,14 +103,18 @@ def main() -> None:
     print("ЕКСПЕРИМЕНТ: EAGER ПРОТИ LAZY")
     print(f"Python {platform.python_version()}, {platform.system()} {platform.machine()}")
     print(f"Час: найкращий із {REPEATS} запусків (perf_counter); пам'ять: пік tracemalloc\n")
-    header = (f"{'Записів':>8} | {'eager, с':>8} | {'lazy, с':>8} | {'eager, МБ':>9} | "
-              f"{'lazy, МБ':>8} | {'1-й eager, мс':>13} | {'1-й lazy, мс':>12}")
+    header = (
+        f"{'Записів':>8} | {'eager, с':>8} | {'lazy, с':>8} | {'eager, МБ':>9} | "
+        f"{'lazy, МБ':>8} | {'1-й eager, мс':>13} | {'1-й lazy, мс':>12}"
+    )
     print(header)
     print("-" * len(header))
     for records in SIZES:
         eager_s, lazy_s, eager_mb, lazy_mb, eager_first, lazy_first = compare_size(records)
-        print(f"{records:>8} | {eager_s:>8.3f} | {lazy_s:>8.3f} | {eager_mb:>9.2f} | "
-              f"{lazy_mb:>8.2f} | {eager_first:>13.2f} | {lazy_first:>12.3f}")
+        print(
+            f"{records:>8} | {eager_s:>8.3f} | {lazy_s:>8.3f} | {eager_mb:>9.2f} | "
+            f"{lazy_mb:>8.2f} | {eager_first:>13.2f} | {lazy_first:>12.3f}"
+        )
     early_termination()
 
 

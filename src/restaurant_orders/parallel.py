@@ -76,7 +76,10 @@ def statistics_processes(history: list[HistoryItem], menu: dict[str, Dish], work
 
 
 def _process_worker(
-    index: int, history: list[HistoryItem], menu: dict[str, Dish], results: "multiprocessing.Queue[tuple[int, PartialStatistics]]"
+    index: int,
+    history: list[HistoryItem],
+    menu: dict[str, Dish],
+    results: "multiprocessing.Queue[tuple[int, PartialStatistics]]",
 ) -> None:
     results.put((index, partial_statistics(history, menu)))
 
