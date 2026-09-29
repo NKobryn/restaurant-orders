@@ -16,7 +16,13 @@ from statistics import mean
 from time import perf_counter
 from typing import Any
 
-from restaurant_orders.analytics import generate_order_history, menu_by_name, statistics_python
+from restaurant_orders.analytics import (
+    generate_order_history,
+    menu_by_name,
+    statistics_numpy,
+    statistics_python,
+    to_arrays,
+)
 
 RESULT_FIELDS = ["experiment", "dataset", "method", "workers", "run1", "run2", "run3", "run4", "run5", "mean", "speedup"]
 
@@ -150,7 +156,11 @@ def run_profile(size: int = 1_000_000) -> None:
         print("  " + line)
     _, _, statistics_peak_mb = peak_memory(statistics_python, history, menu)
     print(f"tracemalloc: пік під час statistics_python {statistics_peak_mb:.2f} MB")
+    print("cProfile ДО оптимізації: statistics_python")
     print(profile_call(statistics_python, history, menu))
+    arrays = to_arrays(history, menu)
+    print("cProfile ПІСЛЯ оптимізації: statistics_numpy")
+    print(profile_call(statistics_numpy, arrays, menu, limit=8))
 
 
 if __name__ == "__main__":

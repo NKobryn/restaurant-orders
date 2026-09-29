@@ -6,6 +6,9 @@ from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from typing import Any
 
+import numpy as np
+from numpy.typing import NDArray
+
 from restaurant_orders.data import MENU
 from restaurant_orders.decorators import track_operation
 from restaurant_orders.models import Dish
@@ -165,3 +168,48 @@ def statistics_python(history: list[HistoryItem], menu: dict[str, Dish]) -> Orde
     totals = order_totals_python(history, menu)
     dish_sales = dish_sales_python(history, menu)
     return build_statistics(len(totals), sum(totals.values()), most_expensive_order(totals), dish_sales, menu)
+
+
+@dataclass(frozen=True, eq=False)
+class HistoryArrays:
+    """The order history as NumPy arrays: one element per position."""
+
+    order_ids: NDArray[np.int32]
+    dish_indexes: NDArray[np.uint8]
+    quantities: NDArray[np.uint8]
+    dish_names: tuple[str, ...]
+
+
+def to_arrays(history: list[HistoryItem], menu: dict[str, Dish]) -> HistoryArrays:
+    """Convert the history to compact NumPy arrays; dishes are stored as their index in the menu."""
+    names = tuple(menu)
+    index = {name: number for number, name in enumerate(names)}
+    count = len(history)
+    return HistoryArrays(
+        order_ids=np.fromiter((item[0] for item in history), dtype=np.int32, count=count),
+        dish_indexes=np.fromiter((index[item[1]] for item in history), dtype=np.uint8, count=count),
+        quantities=np.fromiter((item[2] for item in history), dtype=np.uint8, count=count),
+        dish_names=names,
+    )
+
+
+def statistics_numpy(arrays: HistoryArrays, menu: dict[str, Dish]) -> OrderStatistics:
+    """The same statistics with vectorized NumPy operations instead of Python loops."""
+    prices = np.array([menu[name].price for name in arrays.dish_names], dtype=np.float64)
+    line_totals = prices[arrays.dish_indexes] * arrays.quantities
+    totals = np.bincount(arrays.order_ids, weights=line_totals)
+    present = np.bincount(arrays.order_ids) > 0
+    order_numbers = np.flatnonzero(present)
+    order_totals = totals[present]
+    best = int(np.argmax(order_totals)) if order_totals.size else -1
+    best_order = (int(order_numbers[best]), float(order_totals[best])) if best >= 0 else (0, 0.0)
+    dishes = len(arrays.dish_names)
+    portions = np.bincount(arrays.dish_indexes, weights=arrays.quantities, minlength=dishes)
+    revenue = np.bincount(arrays.dish_indexes, weights=line_totals, minlength=dishes)
+    dish_sales = {name: (int(portions[i]), float(revenue[i])) for i, name in enumerate(arrays.dish_names)}
+    return build_statistics(int(order_numbers.size), float(order_totals.sum()), best_order, dish_sales, menu)
+
+
+def statistics_numpy_from_history(history: list[HistoryItem], menu: dict[str, Dish]) -> OrderStatistics:
+    """NumPy statistics including the conversion of the Python list to arrays."""
+    return statistics_numpy(to_arrays(history, menu), menu)

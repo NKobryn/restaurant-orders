@@ -64,7 +64,8 @@ skip_covered = false
 fail_under = 80
 
 [tool.mypy]
-python_version = "3.11"
+# the stubs of NumPy 2.5 (it needs Python >= 3.12) use Python 3.12 syntax
+python_version = "3.12"
 strict = true
 warn_unused_ignores = true
 warn_return_any = true

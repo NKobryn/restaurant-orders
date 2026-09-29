@@ -7,7 +7,13 @@ import os
 import platform
 from pathlib import Path
 
-from restaurant_orders.analytics import generate_order_history, menu_by_name, statistics_python
+from restaurant_orders.analytics import (
+    generate_order_history,
+    menu_by_name,
+    statistics_numpy,
+    statistics_python,
+    to_arrays,
+)
 from restaurant_orders.parallel import statistics_processes, statistics_threads
 from restaurant_orders.profiling import bar_chart, benchmark_repeated, print_table, result_row, update_results_csv
 
@@ -34,6 +40,9 @@ def main() -> None:
         )
         assert processes.result == baseline.result
         rows.append(result_row("statistics", size, processes, WORKERS, baseline.mean))
+        vectorized = benchmark_repeated("NumPy", statistics_numpy, to_arrays(history, menu), menu, repeats=REPEATS)
+        assert vectorized.result == baseline.result
+        rows.append(result_row("statistics", size, vectorized, "–", baseline.mean))
     print_table(rows)
     for size in SIZES:
         print(f"Час виконання, {size} замовлень:")
