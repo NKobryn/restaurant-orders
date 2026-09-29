@@ -10,7 +10,9 @@
 - лабораторна робота №5 — надійний імпорт/експорт замовлень (exceptions, context managers, logging, CSV/JSON/YAML);
 - лабораторна робота №6 — автоматизоване тестування (pytest, fixtures, mocks, AsyncMock, coverage) і повний сценарій замовлення;
 - лабораторна робота №7 — база даних SQLite: SQLAlchemy ORM, repositories, транзакції, DB-API, міграції Alembic;
-- лабораторна робота №8 — REST API на FastAPI, Pydantic, асинхронний клієнт HTTPX (Task, gather, Semaphore, timeout, retry).
+- лабораторна робота №8 — REST API на FastAPI, Pydantic, асинхронний клієнт HTTPX (Task, gather, Semaphore, timeout, retry);
+- лабораторна робота №9 — профілювання й оптимізація статистики великої історії замовлень (cProfile, tracemalloc,
+  threading, multiprocessing, ThreadPoolExecutor, ProcessPoolExecutor, NumPy, caching).
 
 ## Можливості
 
@@ -96,6 +98,17 @@
 - `api/client.py`: паралельне отримання сум замовлень — `asyncio.create_task` + `gather`, `Semaphore`,
   timeout (`asyncio.wait_for`), retry з експоненційною затримкою (`RetryPolicy`).
 
+Лабораторна робота №9 (паралельність, багатопроцесність та оптимізація):
+
+- `analytics.py`: генератор історії замовлень (10 000 / 100 000 / 1 000 000 замовлень), baseline `statistics_python`
+  (суми замовлень, середній чек, найдорожче замовлення, найпопулярніша страва, оборот, категорії) і
+  векторизована `statistics_numpy` (`np.bincount`); кеш `OrderHistory` + `lru_cache` з invalidation за версією даних;
+- `parallel.py`: `ThreadPoolExecutor` і `ProcessPoolExecutor` за частинами історії, `multiprocessing.Process` + `Queue`,
+  паралельне читання файлів замовлень, `threading.Thread` + `Lock` (race condition і її виправлення);
+- `profiling.py`: повторні вимірювання (`perf_counter`, `timeit`), speedup, CSV результатів, текстові графіки,
+  `cProfile` + `pstats`, `tracemalloc`;
+- `benchmarks/`: експерименти й таблиці результатів (`benchmarks/results/benchmark_results.csv`).
+
 ## Вимоги
 
 Python 3.11 або новішої версії.
@@ -106,17 +119,34 @@ Python 3.11 або новішої версії.
 python -m venv .venv
 source .venv/bin/activate       # Linux/macOS
 # .venv\Scripts\activate        # Windows
-python -m pip install -e ".[dev]"   # PyYAML, SQLAlchemy, Alembic, FastAPI, Uvicorn, HTTPX + засоби розробки
+python -m pip install -e ".[dev]"   # PyYAML, SQLAlchemy, Alembic, FastAPI, Uvicorn, HTTPX, NumPy + засоби розробки
 ```
 
 ## Запуск
 
-Головна точка входу — поточна лабораторна робота (№8): демонстрація REST API. Створює базу `restaurant.db`
-заново, запускає API в тому самому процесі (`httpx.ASGITransport`) і надсилає HTTP-запити: CRUD, замовлення,
-помилки, паралельні запити, retry і timeout. Те саме запускає команда `restaurant-orders`:
+Головна точка входу — поточна лабораторна робота (№9): статистика історії 1 000 000 замовлень усіма
+реалізаціями (Sequential, потоки, процеси, NumPy) з перевіркою однакового результату, читання файлів потоками,
+кеш і Lock. Те саме запускає команда `restaurant-orders`:
 
 ```bash
 python -m restaurant_orders.main
+```
+
+Експерименти лабораторної роботи №9 (5 повторів кожного виміру; результати дописуються в
+`benchmarks/results/benchmark_results.csv`) і профіль:
+
+```bash
+python benchmarks/benchmark_statistics.py   # усі реалізації для 3 розмірів даних + cold/warm cache
+python benchmarks/benchmark_threads.py      # потоки: CPU-bound (GIL), читання файлів, race condition
+python benchmarks/benchmark_processes.py    # процеси: 1, 2, 4, 8 workers, серіалізація, файли
+python benchmarks/benchmark_numpy.py        # NumPy: час і пам'ять list проти масивів
+python -m restaurant_orders.profiling       # cProfile і tracemalloc до та після оптимізації
+```
+
+Демонстрація REST API лабораторної роботи №8 (база `restaurant.db` створюється заново):
+
+```bash
+python -m restaurant_orders.api.demo
 ```
 
 Справжній HTTP-сервер і Swagger UI (http://127.0.0.1:8000/docs):
@@ -228,14 +258,16 @@ restaurant_orders/
 ├── output/, logs/              # результати й журнал імпорту (не комітяться)
 ├── src/restaurant_orders/
 │   ├── __init__.py
-│   ├── main.py                 # головна точка входу: поточна лабораторна (ЛР8, REST API)
+│   ├── main.py                 # головна точка входу: поточна лабораторна (ЛР9, оптимізація)
 │   ├── flow.py, flow_app.py    # сценарій замовлення ЛР6 (логіка і застосунок)
 │   ├── console.py              # консольне меню (ЛР1)
 │   ├── models.py               # Dish, Order (ЛР1), OrderItemRecord, OrderSummary (ЛР3)
 │   ├── services.py             # business logic (ЛР1)
 │   ├── data.py                 # демонстраційне меню і замовлення (ЛР2)
 │   ├── processors.py           # list, set, dict, Counter (ЛР2)
-│   ├── analytics.py            # статистика, closure, *args, **kwargs (ЛР2)
+│   ├── analytics.py            # статистика, closure, *args, **kwargs (ЛР2); історія, NumPy, кеш (ЛР9)
+│   ├── parallel.py             # потоки, процеси, Lock, читання файлів (ЛР9)
+│   ├── profiling.py            # benchmark, speedup, CSV, cProfile, tracemalloc (ЛР9)
 │   ├── decorators.py           # measure_time, track_operation (ЛР2)
 │   ├── analysis.py             # точка входу аналізу (ЛР2)
 │   ├── benchmark.py            # пошук у list / dict / set (ЛР2)
@@ -259,7 +291,8 @@ restaurant_orders/
 │   │   ├── schemas.py          # Pydantic-схеми
 │   │   ├── dependencies.py     # сесія БД через Depends
 │   │   ├── client.py           # httpx.AsyncClient: gather, Semaphore, timeout, retry
-│   │   └── transports.py       # транспорти для демонстрації затримки й збоїв
+│   │   ├── transports.py       # транспорти для демонстрації затримки й збоїв
+│   │   └── demo.py             # демонстрація REST API (ЛР8)
 │   ├── persistence/            # база даних (ЛР7), demo.py — демо ЛР7
 │   │   ├── database.py         # engine, sessions, DATABASE_URL, PRAGMA foreign_keys
 │   │   ├── models.py           # ORM: Category, Dish, Order, OrderItem
@@ -279,8 +312,13 @@ restaurant_orders/
 │       ├── app.py              # застосунок імпорту ЛР5
 │       └── experiments.py      # експерименти ЛР5
 ├── experiments/testing/        # експерименти з тестування (ЛР6)
+├── benchmarks/                 # експерименти ЛР9
+│   ├── benchmark_statistics.py, benchmark_threads.py
+│   ├── benchmark_processes.py, benchmark_numpy.py
+│   └── results/benchmark_results.csv
 └── tests/
     ├── conftest.py                           # спільні fixtures (ЛР6)
     ├── unit/                                 # тести ЛР1–5 (unittest) і нові pytest-тести ЛР6
-    └── integration/                          # ЛР6, база даних (ЛР7), API і async-клієнт (ЛР8)
+    ├── integration/                          # ЛР6, база даних (ЛР7), API і async-клієнт (ЛР8)
+    └── test_parallel.py                      # правильність оптимізацій, Lock, кеш, вимірювання (ЛР9)
 ```
