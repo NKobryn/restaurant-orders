@@ -208,8 +208,8 @@ def test_benchmark_speedup_and_results_csv(tmp_path: Path) -> None:
 
 def test_text_chart_scales_bars() -> None:
     lines = bar_chart({"Sequential": 0.4, "NumPy": 0.04}, "s", width=10)
-    assert lines[0] == "Sequential │██████████ 0.400 s"
-    assert lines[1] == "NumPy      │█ 0.040 s"
+    assert lines[0] == "Sequential │██████████ 0.4 s"
+    assert lines[1] == "NumPy      │█ 0.04 s"
 
 
 def test_profile_and_memory(menu: dict[str, Dish]) -> None:

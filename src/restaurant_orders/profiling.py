@@ -102,7 +102,7 @@ def bar_chart(values: dict[str, float], unit: str, width: int = 40) -> list[str]
     lines = []
     for label, value in values.items():
         bar = "█" * max(1, round(value / largest * width))
-        lines.append(f"{label:<{label_width}} │{bar} {value:.3f} {unit}")
+        lines.append(f"{label:<{label_width}} │{bar} {value:.4g} {unit}")
     return lines
 
 
