@@ -1,6 +1,6 @@
-"""Main entry point: database of orders (laboratory work 7: SQLite, SQLAlchemy ORM, Alembic, DB-API).
+"""Database demo of laboratory work 7 (SQLite, SQLAlchemy ORM, Alembic, DB-API).
 
-The demo database is created from scratch on every run: python -m restaurant_orders.main
+The demo database is created from scratch on every run: python -m restaurant_orders.persistence.demo
 """
 
 import sqlite3

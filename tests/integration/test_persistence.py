@@ -239,7 +239,7 @@ def test_database_url_from_environment(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_database_demo(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
-    from restaurant_orders.main import main
+    from restaurant_orders.persistence.demo import main
 
     monkeypatch.setenv("DATABASE_URL", f"sqlite:///{tmp_path / 'demo.db'}")
     main()
