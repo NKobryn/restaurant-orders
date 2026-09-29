@@ -224,7 +224,7 @@ def test_profile_and_memory(menu: dict[str, Dish]) -> None:
 
 
 def test_optimization_demo(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
-    from restaurant_orders import main as demo
+    from restaurant_orders import optimization_demo as demo
 
     monkeypatch.setattr(demo, "HISTORY_SIZE", 2_000)
     demo.main()

@@ -1,6 +1,6 @@
-"""Main entry point: optimization of the order history statistics (laboratory work 9).
+"""Optimization demo of laboratory work 9: statistics of the order history.
 
-python -m restaurant_orders.main — correctness and speed of every implementation, threads, caching, Lock.
+python -m restaurant_orders.optimization_demo — correctness and speed of every implementation, threads, caching, Lock.
 Detailed experiments: python benchmarks/benchmark_*.py; profile: python -m restaurant_orders.profiling.
 """
 
