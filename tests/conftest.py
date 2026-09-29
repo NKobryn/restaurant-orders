@@ -154,3 +154,28 @@ def menu_session(db_session: Session) -> Session:
     db_session.commit()
     return db_session
 
+
+@pytest.fixture
+def api_session_factory() -> Iterator[Callable[[], Session]]:
+    """Separate in-memory test database shared by all sessions of one test (StaticPool) for the API."""
+    from sqlalchemy import create_engine, event
+    from sqlalchemy.pool import StaticPool
+
+    from restaurant_orders.api.app import app
+    from restaurant_orders.api.dependencies import get_session
+    from restaurant_orders.persistence.database import Base, create_session_factory, enable_sqlite_foreign_keys
+
+    engine = create_engine("sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool)
+    event.listen(engine, "connect", enable_sqlite_foreign_keys)
+    Base.metadata.create_all(engine)
+    factory = create_session_factory(engine)
+
+    def override_session() -> Iterator[Session]:
+        with factory() as session:
+            yield session
+
+    app.dependency_overrides[get_session] = override_session
+    yield factory
+    app.dependency_overrides.clear()
+    engine.dispose()
+

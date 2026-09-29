@@ -38,6 +38,10 @@ testpaths = ["tests"]
 addopts = "--import-mode=importlib --strict-markers"
 asyncio_mode = "strict"
 asyncio_default_fixture_loop_scope = "function"
+filterwarnings = [
+    # Starlette asks to switch TestClient to httpx2; the warning comes from the library, not from our code
+    "ignore:Using `httpx` with `starlette.testclient` is deprecated",
+]
 markers = [
     "integration: tests that combine several components (files, services, application flow)",
 ]
