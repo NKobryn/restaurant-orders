@@ -4,6 +4,7 @@ import random
 from collections import Counter
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
+from functools import lru_cache
 from typing import Any
 
 import numpy as np
@@ -213,3 +214,34 @@ def statistics_numpy(arrays: HistoryArrays, menu: dict[str, Dish]) -> OrderStati
 def statistics_numpy_from_history(history: list[HistoryItem], menu: dict[str, Dish]) -> OrderStatistics:
     """NumPy statistics including the conversion of the Python list to arrays."""
     return statistics_numpy(to_arrays(history, menu), menu)
+
+
+class OrderHistory:
+    """Order history with its menu; the statistics are cached until the prices or the orders change."""
+
+    def __init__(self, history: Iterable[HistoryItem], menu: dict[str, Dish]) -> None:
+        self.items = list(history)
+        self.menu = dict(menu)
+        self.version = 0
+
+    def change_price(self, name: str, price: float) -> None:
+        """Change the price of a dish; the cached statistics become outdated."""
+        dish = self.menu[name]
+        self.menu[name] = Dish(dish.name, dish.category, price)
+        self.version += 1
+
+    def add_item(self, order_id: int, name: str, quantity: int = 1) -> None:
+        """Add a dish to an order; the cached statistics become outdated."""
+        if name not in self.menu:
+            raise KeyError(f"Страви «{name}» немає в меню.")
+        self.items.append((order_id, name, quantity))
+        self.version += 1
+
+    def statistics(self) -> OrderStatistics:
+        return cached_statistics(self, self.version)
+
+
+@lru_cache(maxsize=32)
+def cached_statistics(history: OrderHistory, version: int) -> OrderStatistics:
+    """Statistics of the history; version is a part of the cache key, so a change of data means a new key (invalidation)."""
+    return statistics_python(history.items, history.menu)

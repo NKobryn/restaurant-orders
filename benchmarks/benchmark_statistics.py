@@ -8,6 +8,8 @@ import platform
 from pathlib import Path
 
 from restaurant_orders.analytics import (
+    OrderHistory,
+    cached_statistics,
     generate_order_history,
     menu_by_name,
     statistics_numpy,
@@ -15,7 +17,15 @@ from restaurant_orders.analytics import (
     to_arrays,
 )
 from restaurant_orders.parallel import statistics_processes, statistics_threads
-from restaurant_orders.profiling import bar_chart, benchmark_repeated, print_table, result_row, update_results_csv
+from restaurant_orders.profiling import (
+    bar_chart,
+    benchmark_repeated,
+    calculate_speedup,
+    print_table,
+    result_row,
+    timeit_best,
+    update_results_csv,
+)
 
 RESULTS = Path(__file__).parent / "results" / "benchmark_results.csv"
 SIZES = (10_000, 100_000, 1_000_000)
@@ -48,6 +58,17 @@ def main() -> None:
         print(f"Час виконання, {size} замовлень:")
         chart = {row["method"]: float(row["mean"]) for row in rows if row["dataset"] == size}
         print("\n".join("  " + line for line in bar_chart(chart, "s")))
+    print("\nCaching: cold cache (перший виклик) і warm cache (повторний), timeit")
+    for size in SIZES:
+        cached_statistics.cache_clear()
+        orders = OrderHistory(generate_order_history(size), menu)
+        cold = benchmark_repeated("cold", orders.statistics, repeats=1).mean
+        warm = timeit_best(orders.statistics, number=10_000)
+        info = cached_statistics.cache_info()
+        print(
+            f"{size:>9}: cold {cold:.4f} s, warm {warm * 1e6:.3f} µs, speedup {calculate_speedup(cold, warm):,.0f}×, "
+            f"hits {info.hits}, misses {info.misses}"
+        )
     update_results_csv(RESULTS, "statistics", rows)
     print("Результати збережено: benchmarks/results/benchmark_results.csv")
 

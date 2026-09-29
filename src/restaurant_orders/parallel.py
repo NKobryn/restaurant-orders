@@ -23,7 +23,10 @@ PartialStatistics = tuple[int, float, tuple[int, float], dict[str, Sales]]
 
 
 def split_by_orders(history: list[HistoryItem], parts: int) -> list[list[HistoryItem]]:
-    """Split the history into parts of similar size; positions of one order always stay in the same part."""
+    """Split the history into parts of similar size; positions of one order always stay in the same part.
+
+    The history must be grouped by orders, as it is generated and saved to files.
+    """
     step = -(-len(history) // parts)
     chunks: list[list[HistoryItem]] = []
     start = 0
