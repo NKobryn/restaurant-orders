@@ -52,6 +52,16 @@ def test_root(client: TestClient) -> None:
     assert response.json()["docs"] == "/docs"
 
 
+def test_health(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    from restaurant_orders.config import get_settings
+
+    monkeypatch.setenv("ENVIRONMENT", "production")
+    get_settings.cache_clear()
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok", "environment": "production"}
+
+
 def test_create_dish_returns_201_and_json(client: TestClient) -> None:
     response = client.post("/dishes", json={"name": "  Борщ ", "category": "Перші страви", "price": 95})
     assert response.status_code == 201

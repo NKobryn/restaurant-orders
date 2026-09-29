@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 .mypy_cache/
+.ruff_cache/
 .coverage
 htmlcov/
 .idea/
@@ -11,6 +12,7 @@ dist/
 build/
 *.egg-info/
 .env
+!.env.example
 
 # Files supplied with the laboratory assignment
 Lab_01.docx
@@ -54,3 +56,6 @@ Lab_08_узгоджено_з_Lab_01.docx
 
 # Files supplied with laboratory work 9
 Lab_09_узгоджено_з_Lab_01.docx
+
+# Files supplied with laboratory work 10
+Lab_10_узгоджено_з_Lab_01.docx

@@ -8,6 +8,7 @@ from unittest.mock import Mock, create_autospec
 import pytest
 from sqlalchemy.orm import Session
 
+from restaurant_orders.config import get_settings
 from restaurant_orders.domain.models import Dish, Menu, Order
 from restaurant_orders.domain.pricing import CategoryDiscount, NoDiscount, PricingPolicy
 from restaurant_orders.domain.protocols import KitchenNotifier, PaymentGateway
@@ -24,6 +25,14 @@ processing:
   price_range: {{min: 20, max: 500}}
 logging: {{level: INFO, path: {folder}/logs/import.log}}
 """
+
+
+@pytest.fixture(autouse=True)
+def fresh_settings() -> Iterator[None]:
+    """Settings are cached by get_settings(); every test reads the environment again."""
+    get_settings.cache_clear()
+    yield
+    get_settings.cache_clear()
 
 
 class FakeOrderRepository(Repository[Order]):

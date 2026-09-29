@@ -1,8 +1,9 @@
 """FastAPI application: REST API over the orders database.
 
-Run: alembic upgrade head && uvicorn restaurant_orders.api.app:app --reload  (Swagger UI: /docs)
+Run: restaurant-orders (or alembic upgrade head && uvicorn restaurant_orders.api.app:app --reload); Swagger UI: /docs
 """
 
+import logging
 from http import HTTPStatus
 from typing import Annotated, Literal
 
@@ -28,14 +29,17 @@ from restaurant_orders.api.schemas import (
     OrderStatisticsResponse,
     OrderTotalResponse,
 )
+from restaurant_orders.config import get_settings
 from restaurant_orders.persistence.models import Dish, Order
 from restaurant_orders.persistence.repositories import CategoryRepository, DishRepository, OrderRepository
 from restaurant_orders.persistence.services import OrderPlacementError, OrderService, UnknownDishError
 
+logger = logging.getLogger(__name__)
+
 app = FastAPI(
-    title="Restaurant Orders API",
+    title=get_settings().app_name,
     version=__version__,
-    description="REST API обліку замовлень ресторану (лабораторна робота №8, варіант №11).",
+    description="REST API обліку замовлень ресторану (варіант №11): меню, замовлення, суми, статистика.",
     openapi_tags=[
         {"name": "dishes", "description": "Меню: страви та категорії"},
         {"name": "orders", "description": "Замовлення, позиції, суми та статистика"},
@@ -70,6 +74,7 @@ async def unknown_dish_handler(request: Request, error: UnknownDishError) -> JSO
 
 @app.exception_handler(OrderPlacementError)
 async def order_error_handler(request: Request, error: OrderPlacementError) -> JSONResponse:
+    logger.warning("Order rejected: %s", error)
     return error_response(status.HTTP_409_CONFLICT, str(error))
 
 
@@ -90,7 +95,13 @@ def get_order_or_404(session: Session, order_id: int) -> Order:
 @app.get("/", tags=["service"])
 async def root() -> dict[str, str]:
     """Short information about the service."""
-    return {"service": "Restaurant Orders API", "version": __version__, "docs": "/docs"}
+    return {"service": get_settings().app_name, "version": __version__, "docs": "/docs"}
+
+
+@app.get("/health", tags=["service"])
+async def health() -> dict[str, str]:
+    """Health check for Docker and monitoring: the service is running."""
+    return {"status": "ok", "environment": get_settings().environment}
 
 
 # --- dishes and categories ---
@@ -183,6 +194,7 @@ async def create_order(data: OrderCreate, session: SessionDep) -> OrderResponse:
     """Create an order with all its items in one transaction."""
     service = OrderService(session)
     order = service.place_order(data.id, [(item.dish, item.quantity) for item in data.items])
+    logger.info("Order %s created with %s items", order.id, len(data.items))
     return OrderResponse.from_model(order, service.most_expensive_item(order.id))
 
 

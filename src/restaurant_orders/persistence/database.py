@@ -1,12 +1,11 @@
 """Database engine, sessions and the declarative base of ORM models."""
 
-import os
 from typing import Any
 
 from sqlalchemy import Engine, MetaData, create_engine, event
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
-DEFAULT_DATABASE_URL = "sqlite:///restaurant.db"
+from restaurant_orders.config import get_settings
 
 # Stable constraint names make migrations reproducible.
 NAMING_CONVENTION = {
@@ -25,8 +24,8 @@ class Base(DeclarativeBase):
 
 
 def database_url() -> str:
-    """Return DATABASE_URL from the environment or the default SQLite file."""
-    return os.environ.get("DATABASE_URL", DEFAULT_DATABASE_URL)
+    """Return DATABASE_URL from the settings (environment, .env) or the default SQLite file."""
+    return get_settings().database_url
 
 
 def enable_sqlite_foreign_keys(dbapi_connection: Any, connection_record: Any) -> None:

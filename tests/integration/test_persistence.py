@@ -7,8 +7,8 @@ from sqlalchemy import func, inspect, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from restaurant_orders.config import DEFAULT_DATABASE_URL, get_settings
 from restaurant_orders.persistence.database import (
-    DEFAULT_DATABASE_URL,
     Base,
     create_database_engine,
     create_session_factory,
@@ -239,6 +239,7 @@ def test_database_url_from_environment(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("DATABASE_URL", "sqlite:///other.db")
     assert database_url() == "sqlite:///other.db"
     monkeypatch.delenv("DATABASE_URL")
+    get_settings.cache_clear()
     assert database_url() == DEFAULT_DATABASE_URL
 
 
